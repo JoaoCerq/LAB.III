@@ -26,7 +26,9 @@ void tremolo()
 #define PI 3.14159265358979323846f
 #endif
 extern dma_init();
-// Estado global do tremolo
+
+
+// estrutura do tremolo
 TremoloState gTremolo;
 
 // --------- Inicializacao
@@ -38,6 +40,14 @@ void Tremolo_init(float depth, float lfoFreq, float sampleRate)
     gTremolo.phase    = 0.0f;
     gTremolo.phaseInc = 2.0f * PI * lfoFreq / sampleRate;
     dma_init();
+    int i;
+    for (i = 0; i < N; i++)
+    {
+        xmtPing[i] = 0;
+        xmtPong[i] = 0;
+        rcvPing[i] = 0;
+        rcvPong[i] = 0;
+    }
 }
 
 // Processamento por amostra ---------
@@ -68,11 +78,11 @@ static inline Uint16 Tremolo_processSample(Uint16 x, TremoloState *st)
 
 // --------- Processamento de bloco ---------
 
-void Tremolo_processBlock(volatile Uint16 *inBuf, volatile Uint16 *outBuf, Uint16 nSamples)
+void Tremolo_processBlock(volatile Uint16 *rcv, volatile Uint16 *xmt, Uint16 nSamples)
 {
     Uint16 i;
     for (i = 0; i < nSamples; i++) {
-        outBuf[i] = Tremolo_processSample(inBuf[i], &gTremolo);
+        xmt[i] = Tremolo_processSample(rcv[i], &gTremolo); // outBuf eh o proprio xmt
     }
 }
 
