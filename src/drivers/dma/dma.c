@@ -32,113 +32,24 @@ volatile Uint16 rcvPong[N];
 
 volatile Uint16 currentRxBuf = 0; // 0 pra PING, 1 = PONG
 volatile Uint16 currentTxBuf = 0;
-volatile Uint16 rxBufReady[2] = {0, 0};// no in�cio, n�o h� nada. Ent�o, os dois n�o est�o prontos. Usaremos isso como flag!
-volatile Uint16 txBufEmpty[2] = {1, 1}; // No inicio, os dois est�o vazios
+volatile Uint16 rxBufReady[2] = {0, 0};// no inicio, nao ha nada. Entao, os dois nao estao prontos. Usaremos isso como flag!
+volatile Uint16 txBufEmpty[2] = {1, 1}; // No inicio, os dois estao vazios
 
 extern Int16 aic3204_INIT();
 
-//  MCBSP_Config ConfigLoopBack16= {
-//  MCBSP_SPCR1_RMK(
-//    MCBSP_SPCR1_DLB_ON,                    /* DLB    = 1 */
-//    MCBSP_SPCR1_RJUST_RZF,                 /* RJUST  = 0 */
-//    MCBSP_SPCR1_CLKSTP_DISABLE,            /* CLKSTP = 0 */
-//    MCBSP_SPCR1_DXENA_NA,                  /* DXENA  = 0 */
-//    MCBSP_SPCR1_ABIS_DISABLE,              /* ABIS   = 0 */
-//    MCBSP_SPCR1_RINTM_RRDY,                /* RINTM  = 0 */
-//    0,                                     /* RSYNCER = 0 */
-//    MCBSP_SPCR1_RRST_DISABLE               /* RRST   = 0 */
-//   ),
-//    MCBSP_SPCR2_RMK(
-//    MCBSP_SPCR2_FREE_NO,                   /* FREE   = 0 */
-//    MCBSP_SPCR2_SOFT_NO,                   /* SOFT   = 0 */
-//    MCBSP_SPCR2_FRST_RESET,                /* FRST   = 0 */
-//    MCBSP_SPCR2_GRST_RESET,                /* GRST   = 0 */
-//    MCBSP_SPCR2_XINTM_XRDY,                /* XINTM  = 0 */
-//    0,                                     /* XSYNCER = N/A */
-//    MCBSP_SPCR2_XRST_DISABLE               /* XRST   = 0 */
-//   ),
-//  MCBSP_RCR1_RMK(
-//  MCBSP_RCR1_RFRLEN1_OF(0),                /* RFRLEN1 = 0 */
-//  MCBSP_RCR1_RWDLEN1_16BIT                 /* RWDLEN1 = 5 */
-//  ),
-// MCBSP_RCR2_RMK(
-//    MCBSP_RCR2_RPHASE_SINGLE,              /* RPHASE  = 0 */
-//    MCBSP_RCR2_RFRLEN2_OF(0),              /* RFRLEN2 = 0 */
-//    MCBSP_RCR2_RWDLEN2_8BIT,               /* RWDLEN2 = 0 */
-//    MCBSP_RCR2_RCOMPAND_MSB,               /* RCOMPAND = 0 */
-//    MCBSP_RCR2_RFIG_YES,                   /* RFIG    = 0 */
-//    MCBSP_RCR2_RDATDLY_0BIT                /* RDATDLY = 0 */
-//    ),
-//   MCBSP_XCR1_RMK(
-//    MCBSP_XCR1_XFRLEN1_OF(0),              /* XFRLEN1 = 0 */
-//    MCBSP_XCR1_XWDLEN1_16BIT               /* XWDLEN1 = 5 */
-//
-// ),
-// MCBSP_XCR2_RMK(
-//    MCBSP_XCR2_XPHASE_SINGLE,              /* XPHASE  = 0 */
-//    MCBSP_XCR2_XFRLEN2_OF(0),              /* XFRLEN2 = 0 */
-//    MCBSP_XCR2_XWDLEN2_8BIT,               /* XWDLEN2 = 0 */
-//    MCBSP_XCR2_XCOMPAND_MSB,               /* XCOMPAND = 0 */
-//    MCBSP_XCR2_XFIG_YES,                   /* XFIG    = 0 */
-//    MCBSP_XCR2_XDATDLY_0BIT                /* XDATDLY = 0 */
-//  ),
-// MCBSP_SRGR1_RMK(
-//   MCBSP_SRGR1_FWID_OF(1),                /* FWID    = 1 */
-//   MCBSP_SRGR1_CLKGDV_OF(1)               /* CLKGDV  = 1 */
-// ),
-// MCBSP_SRGR2_RMK(
-//    MCBSP_SRGR2_GSYNC_FREE,                /* FREE    = 0 */
-//    MCBSP_SRGR2_CLKSP_RISING,              /* CLKSP   = 0 */
-//    MCBSP_SRGR2_CLKSM_INTERNAL,            /* CLKSM   = 1 */
-//    MCBSP_SRGR2_FSGM_DXR2XSR,              /* FSGM    = 0 */
-//    MCBSP_SRGR2_FPER_OF(15)                /* FPER    = 0 */
-// ),
-// MCBSP_MCR1_DEFAULT,
-// MCBSP_MCR2_DEFAULT,
-// MCBSP_PCR_RMK(
-//   MCBSP_PCR_XIOEN_SP,                     /* XIOEN    = 0   */
-//   MCBSP_PCR_RIOEN_SP,                     /* RIOEN    = 0   */
-//   MCBSP_PCR_FSXM_INTERNAL,                /* FSXM     = 1   */
-//   MCBSP_PCR_FSRM_EXTERNAL,                /* FSRM     = 0   */
-//   MCBSP_PCR_CLKXM_OUTPUT,                 /* CLKXM    = 1   */
-//   MCBSP_PCR_CLKRM_INPUT,                  /* CLKRM    = 0   */
-//   MCBSP_PCR_SCLKME_NO,                    /* SCLKME   = 0   */
-//   0,                                      /* DXSTAT = N/A   */
-//   MCBSP_PCR_FSXP_ACTIVEHIGH,              /* FSXP     = 0   */
-//   MCBSP_PCR_FSRP_ACTIVEHIGH,              /* FSRP     = 0   */
-//   MCBSP_PCR_CLKXP_RISING,                 /* CLKXP    = 0   */
-//   MCBSP_PCR_CLKRP_FALLING                 /* CLKRP    = 0   */
-// ),
-// MCBSP_RCERA_DEFAULT,
-// MCBSP_RCERB_DEFAULT,
-// MCBSP_RCERC_DEFAULT,
-// MCBSP_RCERD_DEFAULT,
-// MCBSP_RCERE_DEFAULT,
-// MCBSP_RCERF_DEFAULT,
-// MCBSP_RCERG_DEFAULT,
-// MCBSP_RCERH_DEFAULT,
-// MCBSP_XCERA_DEFAULT,
-// MCBSP_XCERB_DEFAULT,
-// MCBSP_XCERC_DEFAULT,
-// MCBSP_XCERD_DEFAULT,
-// MCBSP_XCERE_DEFAULT,
-// MCBSP_XCERF_DEFAULT,
-// MCBSP_XCERG_DEFAULT,
-// MCBSP_XCERH_DEFAULT
-//};
 
 DMA_Config  dmaRcvConfig = {
   DMA_DMACSDP_RMK(
     DMA_DMACSDP_DSTBEN_NOBURST, // Isso permitiria varios acessos de uma so vez, mas o McBSP nao suporta. Essa config desliga isso.
     DMA_DMACSDP_DSTPACK_OFF,   // serve pra empacotar dados antes de enviar.
     DMA_DMACSDP_DST_DARAMPORT1, // Isso define o destino do dma. Esta enviando para a RAM (onde colocamos os buffers)
-    DMA_DMACSDP_SRCBEN_NOBURST, // Isso permitiria varios acessos de uma s� vez, mas o McBSP nao suporta. Essa config desliga isso.
+    DMA_DMACSDP_SRCBEN_NOBURST, // Isso permitiria varios acessos de uma so vez, mas o McBSP nao suporta. Essa config desliga isso.
     DMA_DMACSDP_SRCPACK_OFF, // empacotamento tbm
     DMA_DMACSDP_SRC_PERIPH, // Define de onde o DMA esta lendo. Periferico eh o McBSP
     DMA_DMACSDP_DATATYPE_16BIT //o tamanho do data. Vamos deixar em 16 pra otimizar? (ignora os outros 16)(ALTERADO)
   ),                                       /* DMACSDP  */
   DMA_DMACCR_RMK(
-    DMA_DMACCR_DSTAMODE_POSTINC, // Modo de enderecamento do destino. PostInc = inc a cada dado, � isso que queremos (RAM).
+    DMA_DMACCR_DSTAMODE_POSTINC, // Modo de enderecamento do destino. PostInc = inc a cada dado, eh isso que queremos (RAM).
     DMA_DMACCR_SRCAMODE_CONST, // Modo de enderecaamento da fonte. Const pois o endereco eh o do McBSP.
     DMA_DMACCR_ENDPROG_ON,
     DMA_DMACCR_WP_DEFAULT,// write posting (default = desativado)
@@ -236,20 +147,12 @@ void dma_init(void)
 {
     Uint16 i;
 
-    /* Initialize CSL library - This is REQUIRED !!! */
-//    CSL_init();
-
     /* Set IVPH/IVPD to start of interrupt vector table */
     IRQ_setVecs((Uint32)(&VECSTART));
 
-//    for (i = 0; i <= N - 1; i++) {  // para fins de testes
-//        xmtPing[i] =  i + 1;
-//        rcvPing[i] = 0;
-//    }
-
     for (i = 0; i <= N - 1; i++) {
-        xmtPing[i] =  0xFFFF;
-        xmtPong[i] =  0xFFFF;
+        xmtPing[i] =  0;
+        xmtPong[i] =  0;
         rcvPing[i] = 0;
         rcvPong[i] = 0;
     }
@@ -346,63 +249,21 @@ void taskFxn(void)
     MCBSP_start(hMcbsp,
                 MCBSP_XMIT_START | MCBSP_RCV_START,
                 0u);
-    /* Wait for DMA transfer to be complete */
-//     while (!transferComplete){
-//         ;
-//     }
-//
-//     /*------------------------------------------*\
-//      * Compare values
-//     \*------------------------------------------*/
-//     for(i = 0; i <= N - 1; i++){
-//         if (rcv[i] != xmt[i]){
-//             ++err;
-//             break;
-//        }
-//     }
-//
-//     printf ("%s\n",err?"TEST FAILED" : "TEST PASSED");
-//
-//     /* Restore status of global interrupt enable flag */
+
 //     IRQ_globalRestore(old_intm);
 //
-//     /* We're done with MCBSP and DMA , so close them */
 //     MCBSP_close(hMcbsp);
 //     DMA_close(hDmaRcv);
 //     DMA_close(hDmaXmt);
 
 
     aic3204_INIT();
-
-
-//    Int16 sec, msec;
-//    Int16 sample, dataLeft, dataRight;
-//    Int32 data;
-//    data = 0;
-//    dataLeft = 0;
-//    dataRight = 0;
-//    for ( sec = 0 ; sec < 30 ; sec++ )
-//    {
-//        for ( msec = 0 ; msec < 1000 ; msec++ )
-//        {
-//            for ( sample = 0 ; sample < 48 ; sample++ )
-//            {
-//                EZDSP5502_MCBSP_read(&data);      // RX right channel
-//                EZDSP5502_MCBSP_write(data);      // TX left channel first (FS Low)
-//
-////                EZDSP5502_MCBSP_read(&dataRight);      // RX left channel ->> N�o precisa mais desses dois. Agora vai pros 2 lados
-////                EZDSP5502_MCBSP_write( dataRight);      // TX right channel next (FS High)
-//            }
-//        }
-//    }
 }
 volatile Uint32 dmaRcvCount = 0;
 volatile Uint32 dmaXmtCount = 0;
 
 
 interrupt void dmaXmtIsr(void) {
-    dmaXmtCount++;   // <<< debug
-    int i;
     if (currentTxBuf == 0) // 0 eh ping. Na chamada, o Ping esta sendo enviado e devemos trocar pro buffer do Pong.
     {
         srcAddrHi = (Uint16)(((Uint32)(&xmtPong[0])) >> 15) & 0xFFFFu;
@@ -416,10 +277,6 @@ interrupt void dmaXmtIsr(void) {
 
         DMA_config(hDmaXmt,&dmaXmtConfig);
         DMA_start(hDmaXmt);
-//        for (i = 0; i < N; i++)
-//        {
-//            xmtPing[i] = 0;
-//        }
         txBufEmpty[0] = 1; // Flag que indica que o buffer no Ping agora esta vazio
 
     }
@@ -436,10 +293,6 @@ interrupt void dmaXmtIsr(void) {
 
         DMA_config(hDmaXmt,&dmaXmtConfig);
         DMA_start(hDmaXmt);
-//        for (i = 0; i < N; i++)
-//        {
-//            xmtPong[i] = 0;
-//        }
         txBufEmpty[1] = 1; // Flag que indica que o buffer no Pong agora esta vazio
 
     }
@@ -447,7 +300,6 @@ interrupt void dmaXmtIsr(void) {
 }
 
 interrupt void dmaRcvIsr(void) {
-    dmaRcvCount++;   // <<< debug
     if (currentRxBuf == 0) // 0 eh ping. Na chamada, o ping ficou cheio e devemos trocar pro buffer do pong.
     {
         dstAddrHi = (Uint16)(((Uint32)(&rcvPong[0])) >> 15) & 0xFFFFu;

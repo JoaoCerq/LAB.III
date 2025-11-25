@@ -14,8 +14,8 @@ extern volatile Uint16 rcvPong[N];
 
 extern volatile Uint16 currentRxBuf; // 0 pra PING, 1 = PONG
 extern volatile Uint16 currentTxBuf;
-extern volatile Uint16 rxBufReady[2];// 1 indica que está pronto pra processar!
-extern volatile Uint16 txBufEmpty[2]; // 0 indica que está pronto pra enviar!
+extern volatile Uint16 rxBufReady[2];// 1 indica que esta pronto pra processar
+extern volatile Uint16 txBufEmpty[2]; // 0 indica que esta pronto pra enviar
 
 void tremolo()
 {
@@ -29,7 +29,7 @@ extern dma_init();
 // Estado global do tremolo
 TremoloState gTremolo;
 
-// --------- Inicialização ---------
+// --------- Inicializacao
 
 void Tremolo_init(float depth, float lfoFreq, float sampleRate)
 {
@@ -40,7 +40,7 @@ void Tremolo_init(float depth, float lfoFreq, float sampleRate)
     dma_init();
 }
 
-// --------- Processamento por amostra ---------
+// Processamento por amostra ---------
 
 static inline Uint16 Tremolo_processSample(Uint16 x, TremoloState *st)
 {
@@ -76,18 +76,18 @@ void Tremolo_processBlock(volatile Uint16 *inBuf, volatile Uint16 *outBuf, Uint1
     }
 }
 
-// --------- Integração com DMA ping–pong ---------
+// Integraco com DMA ping–pong
 
 void Tremolo_processIfReady(void)
 {
-    // Buffer PING (índice 0)
+    // Buffer PING (indice 0)
     if (rxBufReady[0] && txBufEmpty[0]) {
         Tremolo_processBlock(rcvPing, xmtPing, N);
         rxBufReady[0] = 0;
         txBufEmpty[0] = 0;
     }
 
-    // Buffer PONG (índice 1)
+    // Buffer PONG (indice 1)
     if (rxBufReady[1] && txBufEmpty[1]) {
         Tremolo_processBlock(rcvPong, xmtPong, N);
         rxBufReady[1] = 0;
