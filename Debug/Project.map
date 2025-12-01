@@ -1,7 +1,7 @@
 ******************************************************************************
               TMS320C55x Linker PC v4.4.1                      
 ******************************************************************************
->> Linked Tue Nov 25 18:03:28 2025
+>> Linked Mon Dec 01 17:21:17 2025
 
 OUTPUT FILE NAME:   <Project.out>
 ENTRY POINT SYMBOL: "_c_int00"  address: 000077ba
@@ -15,7 +15,7 @@ MEMORY CONFIGURATION
 PAGE 0:
   MMR                   00000000   000000c0  00000000  000000c0  RWIX
   BTRSVD                000000c0   00000240  00000000  00000240  RWIX
-  DARAM                 00000300   0000fb00  0000dcea  00001e16  RWIX
+  DARAM                 00000300   0000fb00  0000deea  00001c16  RWIX
   VECS                  0000fe00   00000200  00000200  00000000  RWIX
   CE0                   00010000   003f0000  00000000  003f0000  RWIX
   CE1                   00400000   00400000  00000000  00400000  RWIX
@@ -169,71 +169,71 @@ section   page  orgn(bytes) orgn(words) len(bytes) len(words)   input sections
 *            0   [ 0000ba20 ]  00005d10          *   00000800   
                  [ 0000ba20 ]  00005d10          *   00000800   --HOLE-- [fill = 00]
 
-.bss         0   [ 0000ca20 ]  00006510          *   000002c4   
-                 [ 0000ca20 ]  00006510          *   00000119   rts55x.lib : defs.obj (.bss) [fill = 00]
-                 [ 0000cc52 ]  00006629          *   000000d0              : trgdrv.obj (.bss) [fill = 00]
-                 [ 0000cdf2 ]  000066f9          *   00000001              : fopen.obj (.bss) [fill = 00]
-                 [ 0000cdf4 ]  000066fa          *   00000071              : lowlev.obj (.bss) [fill = 00]
-                 [ 0000ced6 ]  0000676b          *   00000001   --HOLE-- [fill = 00]
-                 [ 0000ced8 ]  0000676c          *   0000003e   dma.obj (.bss) [fill = 00]
-                 [ 0000cf54 ]  000067aa          *   00000008   ezdsp5502_gpio.obj (.bss) [fill = 00]
-                 [ 0000cf64 ]  000067b2          *   00000008   rts55x.lib : sin.obj (.bss) [fill = 00]
-                 [ 0000cf74 ]  000067ba          *   00000008   tremolo.obj (.bss) [fill = 00]
-                 [ 0000cf84 ]  000067c2          *   00000006   rts55x.lib : memory.obj (.bss) [fill = 00]
-                 [ 0000cf90 ]  000067c8          *   00000004              : _lock.obj (.bss) [fill = 00]
-                 [ 0000cf98 ]  000067cc          *   00000004              : exit.obj (.bss) [fill = 00]
-                 [ 0000cfa0 ]  000067d0          *   00000002   ezdsp5502_mcbsp.obj (.bss) [fill = 00]
-                 [ 0000cfa4 ]  000067d2          *   00000002   state_online.obj (.bss) [fill = 00]
+dmaMem       0   [ 0000ca20 ]  00006510          *   00000300   
+                 [ 0000ca20 ]  00006510          *   00000300   dma.obj (dmaMem) [fill = 00]
 
-.cinit       0   [ 0000cfa8 ]  000067d4          *   00000201   
-                 [ 0000cfa8 ]  000067d4          *   00000081   csl5502x.lib : csl_dmadat.obj (.cinit)
-                 [ 0000d0aa ]  00006855          *   00000069                : csl_mcbspdat.obj (.cinit)
-                 [ 0000d17c ]  000068be          *   00000048   dma.obj (.cinit)
-                 [ 0000d20c ]  00006906          *   0000002d   rts55x.lib : lowlev.obj (.cinit)
-                 [ 0000d266 ]  00006933          *   0000002a              : defs.obj (.cinit)
-                 [ 0000d2ba ]  0000695d          *   00000025   csl5502x.lib : csl_csldat.obj (.cinit)
-                 [ 0000d304 ]  00006982          *   00000023                : csl_gpiodat.obj (.cinit)
-                 [ 0000d34a ]  000069a5          *   0000000b   rts55x.lib : sin.obj (.cinit)
-                 [ 0000d360 ]  000069b0          *   0000000a              : _lock.obj (.cinit)
-                 [ 0000d374 ]  000069ba          *   0000000a              : exit.obj (.cinit)
-                 [ 0000d388 ]  000069c4          *   00000008   state_online.obj (.cinit)
-                 [ 0000d398 ]  000069cc          *   00000004   rts55x.lib : fopen.obj (.cinit)
-                 [ 0000d3a0 ]  000069d0          *   00000004              : memory.obj (.cinit)
-                 [ 0000d3a8 ]  000069d4          *   00000001   --HOLE-- [fill = 0]
+.bss         0   [ 0000d020 ]  00006810          *   000002c4   
+                 [ 0000d020 ]  00006810          *   00000119   rts55x.lib : defs.obj (.bss) [fill = 00]
+                 [ 0000d252 ]  00006929          *   000000d0              : trgdrv.obj (.bss) [fill = 00]
+                 [ 0000d3f2 ]  000069f9          *   00000001              : fopen.obj (.bss) [fill = 00]
+                 [ 0000d3f4 ]  000069fa          *   00000071              : lowlev.obj (.bss) [fill = 00]
+                 [ 0000d4d6 ]  00006a6b          *   00000001   --HOLE-- [fill = 00]
+                 [ 0000d4d8 ]  00006a6c          *   0000003e   dma.obj (.bss) [fill = 00]
+                 [ 0000d554 ]  00006aaa          *   00000008   ezdsp5502_gpio.obj (.bss) [fill = 00]
+                 [ 0000d564 ]  00006ab2          *   00000008   rts55x.lib : sin.obj (.bss) [fill = 00]
+                 [ 0000d574 ]  00006aba          *   00000008   tremolo.obj (.bss) [fill = 00]
+                 [ 0000d584 ]  00006ac2          *   00000006   rts55x.lib : memory.obj (.bss) [fill = 00]
+                 [ 0000d590 ]  00006ac8          *   00000004              : _lock.obj (.bss) [fill = 00]
+                 [ 0000d598 ]  00006acc          *   00000004              : exit.obj (.bss) [fill = 00]
+                 [ 0000d5a0 ]  00006ad0          *   00000002   ezdsp5502_mcbsp.obj (.bss) [fill = 00]
+                 [ 0000d5a4 ]  00006ad2          *   00000002   state_online.obj (.bss) [fill = 00]
 
-dmaMem       0   [ 0000d3c0 ]  000069e0          *   00000200   
-                 [ 0000d3c0 ]  000069e0          *   00000200   dma.obj (dmaMem) [fill = 00]
+.cinit       0   [ 0000d5a8 ]  00006ad4          *   00000201   
+                 [ 0000d5a8 ]  00006ad4          *   00000081   csl5502x.lib : csl_dmadat.obj (.cinit)
+                 [ 0000d6aa ]  00006b55          *   00000069                : csl_mcbspdat.obj (.cinit)
+                 [ 0000d77c ]  00006bbe          *   00000048   dma.obj (.cinit)
+                 [ 0000d80c ]  00006c06          *   0000002d   rts55x.lib : lowlev.obj (.cinit)
+                 [ 0000d866 ]  00006c33          *   0000002a              : defs.obj (.cinit)
+                 [ 0000d8ba ]  00006c5d          *   00000025   csl5502x.lib : csl_csldat.obj (.cinit)
+                 [ 0000d904 ]  00006c82          *   00000023                : csl_gpiodat.obj (.cinit)
+                 [ 0000d94a ]  00006ca5          *   0000000b   rts55x.lib : sin.obj (.cinit)
+                 [ 0000d960 ]  00006cb0          *   0000000a              : _lock.obj (.cinit)
+                 [ 0000d974 ]  00006cba          *   0000000a              : exit.obj (.cinit)
+                 [ 0000d988 ]  00006cc4          *   00000008   state_online.obj (.cinit)
+                 [ 0000d998 ]  00006ccc          *   00000004   rts55x.lib : fopen.obj (.cinit)
+                 [ 0000d9a0 ]  00006cd0          *   00000004              : memory.obj (.cinit)
+                 [ 0000d9a8 ]  00006cd4          *   00000001   --HOLE-- [fill = 0]
 
-.const       0   [ 0000d7c0 ]  00006be0          *   000001b6   
-                 [ 0000d7c0 ]  00006be0          *   00000101   rts55x.lib : ctype.obj (.const:__ctypes_)
-                 [ 0000d9c2 ]  00006ce1          *   00000001   --HOLE-- [fill = 00]
-                 [ 0000d9c4 ]  00006ce2          *   00000024              : _printfi.obj (.const:.string)
-                 [ 0000da0c ]  00006d06          *   0000001b   state_initial.obj (.const:.string)
-                 [ 0000da42 ]  00006d21          *   0000001b   ezdsp5502_mcbsp.obj (.const:_$P$T0$1)
-                 [ 0000da78 ]  00006d3c          *   00000014   rts55x.lib : sin.obj (.const)
-                 [ 0000daa0 ]  00006d50          *   0000000c              : _printfi.obj (.const)
-                 [ 0000dab8 ]  00006d5c          *   0000000a   ezdsp5502_i2c.obj (.const:_$P$T0$1)
-                 [ 0000dacc ]  00006d66          *   0000000a   tremolo.obj (.const)
-                 [ 0000dae0 ]  00006d70          *   00000008   rts55x.lib : divd.obj (.const:_initial_approx$1)
-                 [ 0000daf0 ]  00006d78          *   00000008              : round.obj (.const)
-                 [ 0000db00 ]  00006d80          *   00000006              : modf.obj (.const)
-                 [ 0000db0c ]  00006d86          *   00000006   state_online.obj (.const)
-                 [ 0000db18 ]  00006d8c          *   00000004   rts55x.lib : trunc.obj (.const)
-                 [ 0000db20 ]  00006d90          *   00000002              : fputs.obj (.const:.string)
-                 [ 0000db24 ]  00006d92          *   00000002              : fltlid.obj (.const)
-                 [ 0000db28 ]  00006d94          *   00000002              : fltuld.obj (.const)
+.const       0   [ 0000d9c0 ]  00006ce0          *   000001b6   
+                 [ 0000d9c0 ]  00006ce0          *   00000101   rts55x.lib : ctype.obj (.const:__ctypes_)
+                 [ 0000dbc2 ]  00006de1          *   00000001   --HOLE-- [fill = 00]
+                 [ 0000dbc4 ]  00006de2          *   00000024              : _printfi.obj (.const:.string)
+                 [ 0000dc0c ]  00006e06          *   0000001b   state_initial.obj (.const:.string)
+                 [ 0000dc42 ]  00006e21          *   0000001b   ezdsp5502_mcbsp.obj (.const:_$P$T0$1)
+                 [ 0000dc78 ]  00006e3c          *   00000014   rts55x.lib : sin.obj (.const)
+                 [ 0000dca0 ]  00006e50          *   0000000c              : _printfi.obj (.const)
+                 [ 0000dcb8 ]  00006e5c          *   0000000a   ezdsp5502_i2c.obj (.const:_$P$T0$1)
+                 [ 0000dccc ]  00006e66          *   0000000a   tremolo.obj (.const)
+                 [ 0000dce0 ]  00006e70          *   00000008   rts55x.lib : divd.obj (.const:_initial_approx$1)
+                 [ 0000dcf0 ]  00006e78          *   00000008              : round.obj (.const)
+                 [ 0000dd00 ]  00006e80          *   00000006              : modf.obj (.const)
+                 [ 0000dd0c ]  00006e86          *   00000006   state_online.obj (.const)
+                 [ 0000dd18 ]  00006e8c          *   00000004   rts55x.lib : trunc.obj (.const)
+                 [ 0000dd20 ]  00006e90          *   00000002              : fputs.obj (.const:.string)
+                 [ 0000dd24 ]  00006e92          *   00000002              : fltlid.obj (.const)
+                 [ 0000dd28 ]  00006e94          *   00000002              : fltuld.obj (.const)
 
-.csldata     0   [ 0000db40 ]  00006da0          *   00000126   
-                 [ 0000db40 ]  00006da0          *   0000007e   csl5502x.lib : csl_dmadat.obj (.csldata:DMA_data) [fill = 00]
-                 [ 0000dc3c ]  00006e1e          *   00000066                : csl_mcbspdat.obj (.csldata:MCBSP_data) [fill = 00]
-                 [ 0000dd08 ]  00006e84          *   00000022                : csl_csldat.obj (.csldata:SYS_data) [fill = 00]
-                 [ 0000dd4c ]  00006ea6          *   00000020                : csl_gpiodat.obj (.csldata:GPIO_data) [fill = 00]
+.csldata     0   [ 0000dd40 ]  00006ea0          *   00000126   
+                 [ 0000dd40 ]  00006ea0          *   0000007e   csl5502x.lib : csl_dmadat.obj (.csldata:DMA_data) [fill = 00]
+                 [ 0000de3c ]  00006f1e          *   00000066                : csl_mcbspdat.obj (.csldata:MCBSP_data) [fill = 00]
+                 [ 0000df08 ]  00006f84          *   00000022                : csl_csldat.obj (.csldata:SYS_data) [fill = 00]
+                 [ 0000df4c ]  00006fa6          *   00000020                : csl_gpiodat.obj (.csldata:GPIO_data) [fill = 00]
 
-.cio         0   [ 0000dda0 ]  00006ed0          *   00000120   
-                 [ 0000dda0 ]  00006ed0          *   00000120   rts55x.lib : trgmsg.obj (.cio) [fill = 00]
+.cio         0   [ 0000dfa0 ]  00006fd0          *   00000120   
+                 [ 0000dfa0 ]  00006fd0          *   00000120   rts55x.lib : trgmsg.obj (.cio) [fill = 00]
 
-.switch      0   [ 0000dfe0 ]  00006ff0          *   0000002c   
-                 [ 0000dfe0 ]  00006ff0          *   0000002c   state_online.obj (.switch:_state_online)
+.switch      0   [ 0000e1e0 ]  000070f0          *   0000002c   
+                 [ 0000e1e0 ]  000070f0          *   0000002c   state_online.obj (.switch:_state_online)
 
 .vectors     0     0000fe00  [ 00007f00 ] 00000100          *   
                    0000fe00  [ 00007f00 ] 00000100          *   vectors_dma4.obj (.vectors)
@@ -250,7 +250,7 @@ byte addr   word addr   name
 00000002                $TI_capability$C5500$CallingConvention
 00000002                $TI_capability$C5500$MemoryModel
 00000001                $TI_capability_requires_rev2
-            00006510    .bss
+            00006810    .bss
             00000180    .data
 00000300                .text
 00007a03                C$$EXIT
@@ -261,10 +261,10 @@ byte addr   word addr   name
 0000693f                _AIC3204_rget
 0000698c                _AIC3204_rset
 00007a0c                _CSL5502_LIB_
-            00006da0    _CSL_DmaData
-            00006ea6    _CSL_GpioData
-            00006e1e    _CSL_McbspData
-            00006e84    _CSL_SysData
+            00006ea0    _CSL_DmaData
+            00006fa6    _CSL_GpioData
+            00006f1e    _CSL_McbspData
+            00006f84    _CSL_SysData
 000079c8                _CSL_init
 000061b8                _DMA_config
 0000657c                _DMA_open
@@ -325,7 +325,7 @@ byte addr   word addr   name
 00004de0                _Tremolo_processBlock
 00004e2e                _Tremolo_processIfReady
 0000fe00                _VECSTART
-            00006ed0    __CIOBUF_
+            00006fd0    __CIOBUF_
 000079b8                __CSL_init
             00004d10    __STACK_END
 00002000                __STACK_SIZE
@@ -333,12 +333,12 @@ byte addr   word addr   name
 00001000                __SYSSTACK_SIZE
 00000001                __TI_args_main
 ffffffff                ___binit__
-            00006510    ___bss__
+            00006810    ___bss__
 ffffffff                ___c_args__
-            000067d4    ___cinit__
+            00006ad4    ___cinit__
             00000180    ___data__
             00000180    ___edata__
-            000067d4    ___end__
+            00006ad4    ___end__
 00007a10                ___etext__
 000078c2                ___isinf
 ffffffff                ___pinit__
@@ -346,9 +346,9 @@ ffffffff                ___pinit__
 000045e7                __addd
 00007578                __args_main
 00003fc8                __cleanup
-            000067cc    __cleanup_ptr
+            00006acc    __cleanup_ptr
 00005409                __cmpd
-            00006be0    __ctypes_
+            00006ce0    __ctypes_
 00003483                __divd
 0000760e                __divli
 000045b2                __divlli
@@ -356,7 +356,7 @@ ffffffff                ___pinit__
 00006a90                __divul
 000044be                __divull
 00006647                __doflush
-            000067ce    __dtors_ptr
+            00006ace    __dtors_ptr
 000053d5                __eqld
 000077ee                __fixdi
 000070ef                __fixdli
@@ -368,12 +368,12 @@ ffffffff                ___pinit__
 0000742e                __fltuld
 00006eb2                __frcmpyd
 00006f28                __frcmpyd_div
-            00006628    __ft_end
-            00006510    __ftable
+            00006928    __ft_end
+            00006810    __ftable
 0000538b                __geqd
 00005340                __gtrd
 000052f3                __leqd
-            000067c8    __lock
+            00006ac8    __lock
 000052ab                __lssd
 00005f3b                __mpyd
 0000792b                __mpyli
@@ -395,33 +395,33 @@ ffffffff                ___pinit__
 00007904                __subd
             00004d10    __sys_memory
             00005d10    __sysstack
-            00006588    __tmpnams
+            00006888    __tmpnams
 00007656                __trunc
-            000067ca    __unlock
+            00006aca    __unlock
 0000649c                __wrt_ok
 00007a02                _abort
 000029b6                _add_device
 000069b6                _aic3204_INIT
 00004e92                _aic3204_init
-            000067d0    _aicMcbsp
+            00006ad0    _aicMcbsp
 000073d2                _atoi
 0000752b                _auto_init
 000077ba                _c_int00
 0000345d                _calloc
 00003455                _chkheap
 00002943                _close
-            0000676c    _currentRxBuf
-            0000676d    _currentTxBuf
-            00006772    _dmaRcvConfig
-            000067a6    _dmaRcvCount
+            00006a6c    _currentRxBuf
+            00006a6d    _currentTxBuf
+            00006a72    _dmaRcvConfig
+            00006aa6    _dmaRcvCount
 00003a21                _dmaRcvIsr
-            00006784    _dmaXmtConfig
-            000067a8    _dmaXmtCount
+            00006a84    _dmaXmtConfig
+            00006aa8    _dmaXmtCount
 0000384f                _dmaXmtIsr
 0000487f                _dma_init
-            000067a3    _dstAddrHi
-            000067a4    _dstAddrLo
-            0000679d    _err
+            00006aa3    _dstAddrHi
+            00006aa4    _dstAddrLo
+            00006a9d    _err
 000076d6                _exit
 00006dc0                _fclose
 000066b0                _fflush
@@ -433,15 +433,15 @@ ffffffff                ___pinit__
 000033ff                _free_memory
 00004022                _freopen
 00007238                _fseek
-            000067ba    _gTremolo
+            00006aba    _gTremolo
 00002aa6                _getenv
-            00006796    _hDmaRcv
-            00006798    _hDmaXmt
-            000067aa    _hGPIO_group0
-            000067ac    _hGPIO_group1
-            000067ae    _hGPIO_group2
-            000067b0    _hGPIO_group3
-            0000679a    _hMcbsp
+            00006a96    _hDmaRcv
+            00006a98    _hDmaXmt
+            00006aaa    _hGPIO_group0
+            00006aac    _hGPIO_group1
+            00006aae    _hGPIO_group2
+            00006ab0    _hGPIO_group3
+            00006a9a    _hMcbsp
 000018a4                _initial_lcd
 000028d4                _lseek
 00006d43                _ltoa
@@ -453,7 +453,7 @@ ffffffff                ___pinit__
 0000309a                _minit
 00006709                _modf
 00001e26                _offline_lcd
-            0000679e    _old_intm
+            00006a9e    _old_intm
 00003bd5                _oled_test
 00005537                _online_E0
 00005594                _online_E0_processando
@@ -472,20 +472,20 @@ ffffffff                ___pinit__
 000069ea                _putc
 00006a81                _putchar
 00005c62                _puts
-            000067a0    _rcvEventId
-            00006ae0    _rcvPing
-            00006b60    _rcvPong
+            00006aa0    _rcvEventId
+            00006710    _rcvPing
+            00006790    _rcvPong
 00002767                _read
 000071cb                _readmsg
 000031f4                _realloc
 000079f8                _remove
 00002731                _remove_device
 000026d8                _rename
-            0000676e    _rxBufReady
+            00006a6e    _rxBufReady
 000063b6                _setvbuf
 00005085                _sin
-            000067a1    _srcAddrHi
-            000067a2    _srcAddrLo
+            00006aa1    _srcAddrHi
+            00006aa2    _srcAddrLo
 00006cc2                _state_initial
 00006d39                _state_initial_enter
 00006bba                _state_machine
@@ -494,19 +494,19 @@ ffffffff                ___pinit__
 00005461                _state_online
 0000552d                _state_online_enter
 000048f7                _taskFxn
-            0000679c    _transferComplete
+            00006a9c    _transferComplete
 00004d3e                _tremolo
-            00006770    _txBufEmpty
+            00006a70    _txBufEmpty
 000026a5                _unlink
 00002563                _write
 00006885                _writemsg
-            0000679f    _xmtEventId
-            000069e0    _xmtPing
-            00006a60    _xmtPong
+            00006a9f    _xmtEventId
+            00006510    _xmtPing
+            00006610    _xmtPong
 ffffffff                binit
-            000067d4    cinit
+            00006ad4    cinit
             00000180    edata
-            000067d4    end
+            00006ad4    end
 00007a10                etext
 0000fe10                int0
 0000fe18                int1
@@ -755,55 +755,55 @@ byte addr   word addr   name
             00004d10    __STACK_END
             00004d10    __sys_memory
             00005d10    __sysstack
-            00006510    .bss
-            00006510    ___bss__
-            00006510    __ftable
-            00006588    __tmpnams
-            00006628    __ft_end
-            0000676c    _currentRxBuf
-            0000676d    _currentTxBuf
-            0000676e    _rxBufReady
-            00006770    _txBufEmpty
-            00006772    _dmaRcvConfig
-            00006784    _dmaXmtConfig
-            00006796    _hDmaRcv
-            00006798    _hDmaXmt
-            0000679a    _hMcbsp
-            0000679c    _transferComplete
-            0000679d    _err
-            0000679e    _old_intm
-            0000679f    _xmtEventId
-            000067a0    _rcvEventId
-            000067a1    _srcAddrHi
-            000067a2    _srcAddrLo
-            000067a3    _dstAddrHi
-            000067a4    _dstAddrLo
-            000067a6    _dmaRcvCount
-            000067a8    _dmaXmtCount
-            000067aa    _hGPIO_group0
-            000067ac    _hGPIO_group1
-            000067ae    _hGPIO_group2
-            000067b0    _hGPIO_group3
-            000067ba    _gTremolo
-            000067c8    __lock
-            000067ca    __unlock
-            000067cc    __cleanup_ptr
-            000067ce    __dtors_ptr
-            000067d0    _aicMcbsp
-            000067d4    ___cinit__
-            000067d4    ___end__
-            000067d4    cinit
-            000067d4    end
-            000069e0    _xmtPing
-            00006a60    _xmtPong
-            00006ae0    _rcvPing
-            00006b60    _rcvPong
-            00006be0    __ctypes_
-            00006da0    _CSL_DmaData
-            00006e1e    _CSL_McbspData
-            00006e84    _CSL_SysData
-            00006ea6    _CSL_GpioData
-            00006ed0    __CIOBUF_
+            00006510    _xmtPing
+            00006610    _xmtPong
+            00006710    _rcvPing
+            00006790    _rcvPong
+            00006810    .bss
+            00006810    ___bss__
+            00006810    __ftable
+            00006888    __tmpnams
+            00006928    __ft_end
+            00006a6c    _currentRxBuf
+            00006a6d    _currentTxBuf
+            00006a6e    _rxBufReady
+            00006a70    _txBufEmpty
+            00006a72    _dmaRcvConfig
+            00006a84    _dmaXmtConfig
+            00006a96    _hDmaRcv
+            00006a98    _hDmaXmt
+            00006a9a    _hMcbsp
+            00006a9c    _transferComplete
+            00006a9d    _err
+            00006a9e    _old_intm
+            00006a9f    _xmtEventId
+            00006aa0    _rcvEventId
+            00006aa1    _srcAddrHi
+            00006aa2    _srcAddrLo
+            00006aa3    _dstAddrHi
+            00006aa4    _dstAddrLo
+            00006aa6    _dmaRcvCount
+            00006aa8    _dmaXmtCount
+            00006aaa    _hGPIO_group0
+            00006aac    _hGPIO_group1
+            00006aae    _hGPIO_group2
+            00006ab0    _hGPIO_group3
+            00006aba    _gTremolo
+            00006ac8    __lock
+            00006aca    __unlock
+            00006acc    __cleanup_ptr
+            00006ace    __dtors_ptr
+            00006ad0    _aicMcbsp
+            00006ad4    ___cinit__
+            00006ad4    ___end__
+            00006ad4    cinit
+            00006ad4    end
+            00006ce0    __ctypes_
+            00006ea0    _CSL_DmaData
+            00006f1e    _CSL_McbspData
+            00006f84    _CSL_SysData
+            00006fa6    _CSL_GpioData
+            00006fd0    __CIOBUF_
 0000fe00                _VECSTART
 0000fe08                nmi
 0000fe10                int0

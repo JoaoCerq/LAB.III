@@ -22,9 +22,9 @@
 
 /* Define transmit and receive buffers */
 #pragma DATA_SECTION(xmtPing,"dmaMem")
-volatile Uint16 xmtPing[N];
+volatile Uint16 xmtPing[N*2];
 #pragma DATA_SECTION(xmtPong,"dmaMem")
-volatile Uint16 xmtPong[N];
+volatile Uint16 xmtPong[N*2];
 #pragma DATA_SECTION(rcvPing,"dmaMem")
 volatile Uint16 rcvPing[N];
 #pragma DATA_SECTION(rcvPong,"dmaMem")
@@ -87,7 +87,7 @@ DMA_Config  dmaXmtConfig = {
     DMA_DMACSDP_SRCBEN_NOBURST, //Isso permitiria varios acessos de uma so vez, mas o McDSP nao suporta. Essa config desliga isso.
     DMA_DMACSDP_SRCPACK_OFF,  //empacotamento tbm
     DMA_DMACSDP_SRC_DARAMPORT0, // Define de onde o DMA esta lendo. Ta lendo da RAM pela porta 0
-    DMA_DMACSDP_DATATYPE_16BIT //o tamanho do data. Vamos deixar em 16 pra otimizar?(ALTERADO)
+    DMA_DMACSDP_DATATYPE_32BIT //o tamanho do data. Vamos deixar em 16 pra otimizar?(ALTERADO)
   ),                                       /* DMACSDP  */
   DMA_DMACCR_RMK(
     DMA_DMACCR_DSTAMODE_CONST, // Modo de enderecamento do destino. Const pois o endereco eh o do McBSP.

@@ -7,8 +7,8 @@
 
 #include "tremolo.h"
 
-extern volatile Uint16 xmtPing[N];
-extern volatile Uint16 xmtPong[N];
+extern volatile Uint16 xmtPing[N*2];
+extern volatile Uint16 xmtPong[N*2];
 extern volatile Uint16 rcvPing[N];
 extern volatile Uint16 rcvPong[N];
 
