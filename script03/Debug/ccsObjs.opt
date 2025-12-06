@@ -1,0 +1,5 @@
+"./main.obj"
+"./reverb.obj"
+"./wav_header.obj"
+"../lnkx.cmd"
+-llibc.a
