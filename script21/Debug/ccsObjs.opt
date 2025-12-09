@@ -1,0 +1,6 @@
+"./main.obj"
+"./pitch_shifter.obj"
+"./reverb.obj"
+"./wav_header.obj"
+"../lnkx.cmd"
+-llibc.a
