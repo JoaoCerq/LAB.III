@@ -91,7 +91,7 @@ Int16 aic3204_init( )
     AIC3204_rset( 0, 0 );      // Select page 0
     AIC3204_rset( 64, 2 );     // Left vol=right vol
     AIC3204_rset( 65, 0);      // Left DAC gain to 0dB VOL; Right tracks Left
-    AIC3204_rset( 63, 0xd4 );  // Power up left,right data paths and set channel
+    AIC3204_rset( 63, 0xd8 );  // Power up left,right data paths and set channel
     AIC3204_rset( 0, 1 );      // Select page 1
     AIC3204_rset( 9, 0x30 );   // Power up HPL,HPR
     AIC3204_rset( 0x10, 0x00 );// Unmute HPL , 0dB gain

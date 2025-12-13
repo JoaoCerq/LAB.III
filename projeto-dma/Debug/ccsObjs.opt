@@ -13,7 +13,6 @@
 "./src/drivers/lcd/LCD.obj"
 "./src/effects/effect.obj"
 "./src/effects/effect_dma.obj"
-"./src/effects/tremolo.obj"
 "./src/state_machine/state_machine.obj"
 "./src/states/state_initial.obj"
 "./src/states/state_running.obj"

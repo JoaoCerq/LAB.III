@@ -25,7 +25,6 @@ ORDERED_OBJS += \
 "./src/drivers/lcd/LCD.obj" \
 "./src/effects/effect.obj" \
 "./src/effects/effect_dma.obj" \
-"./src/effects/tremolo.obj" \
 "./src/state_machine/state_machine.obj" \
 "./src/states/state_initial.obj" \
 "./src/states/state_running.obj" \
@@ -180,9 +179,9 @@ Project.out: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "lcd-osd9616\exemplo_uso.obj" "lcd-osd9616\lcd.obj" "lib\bsl\ezdsp5502.obj" "lib\bsl\ezdsp5502_gpio.obj" "lib\bsl\ezdsp5502_i2c.obj" "lib\bsl\ezdsp5502_i2cgpio.obj" "lib\bsl\ezdsp5502_mcbsp.obj" "src\drivers\aic\aic.obj" "src\drivers\aic\aic3204_init.obj" "src\drivers\dma\dma.obj" "src\drivers\dma\vectors_dma4.obj" "src\drivers\lcd\LCD.obj" "src\effects\effect.obj" "src\effects\effect_dma.obj" "src\effects\tremolo.obj" "src\state_machine\state_machine.obj" "src\states\state_initial.obj" "src\states\state_running.obj" 
+	-$(RM) "main.obj" "lcd-osd9616\exemplo_uso.obj" "lcd-osd9616\lcd.obj" "lib\bsl\ezdsp5502.obj" "lib\bsl\ezdsp5502_gpio.obj" "lib\bsl\ezdsp5502_i2c.obj" "lib\bsl\ezdsp5502_i2cgpio.obj" "lib\bsl\ezdsp5502_mcbsp.obj" "src\drivers\aic\aic.obj" "src\drivers\aic\aic3204_init.obj" "src\drivers\dma\dma.obj" "src\drivers\dma\vectors_dma4.obj" "src\drivers\lcd\LCD.obj" "src\effects\effect.obj" "src\effects\effect_dma.obj" "src\state_machine\state_machine.obj" "src\states\state_initial.obj" "src\states\state_running.obj" 
 	-$(RM) "src\drivers\dma\vectors_dma4.d" 
-	-$(RM) "main.d" "lcd-osd9616\exemplo_uso.d" "lcd-osd9616\lcd.d" "lib\bsl\ezdsp5502.d" "lib\bsl\ezdsp5502_gpio.d" "lib\bsl\ezdsp5502_i2c.d" "lib\bsl\ezdsp5502_i2cgpio.d" "lib\bsl\ezdsp5502_mcbsp.d" "src\drivers\aic\aic.d" "src\drivers\aic\aic3204_init.d" "src\drivers\dma\dma.d" "src\drivers\lcd\LCD.d" "src\effects\effect.d" "src\effects\effect_dma.d" "src\effects\tremolo.d" "src\state_machine\state_machine.d" "src\states\state_initial.d" "src\states\state_running.d" 
+	-$(RM) "main.d" "lcd-osd9616\exemplo_uso.d" "lcd-osd9616\lcd.d" "lib\bsl\ezdsp5502.d" "lib\bsl\ezdsp5502_gpio.d" "lib\bsl\ezdsp5502_i2c.d" "lib\bsl\ezdsp5502_i2cgpio.d" "lib\bsl\ezdsp5502_mcbsp.d" "src\drivers\aic\aic.d" "src\drivers\aic\aic3204_init.d" "src\drivers\dma\dma.d" "src\drivers\lcd\LCD.d" "src\effects\effect.d" "src\effects\effect_dma.d" "src\state_machine\state_machine.d" "src\states\state_initial.d" "src\states\state_running.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

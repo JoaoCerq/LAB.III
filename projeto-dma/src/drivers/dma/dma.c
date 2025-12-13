@@ -16,19 +16,19 @@
 
 
 //---------Global constants---------
-#define N       128
+#define N       2*128
 
 //---------Global data definition---------
 
 /* Define transmit and receive buffers */
 #pragma DATA_SECTION(xmtPing,"dmaMem")
-volatile Uint16 xmtPing[2*N];
+volatile Uint16 xmtPing[N];
 #pragma DATA_SECTION(xmtPong,"dmaMem")
-volatile Uint16 xmtPong[2*N];
+volatile Uint16 xmtPong[N];
 #pragma DATA_SECTION(rcvPing,"dmaMem")
-volatile Uint16 rcvPing[2*N];
+volatile Uint16 rcvPing[N];
 #pragma DATA_SECTION(rcvPong,"dmaMem")
-volatile Uint16 rcvPong[2*N];
+volatile Uint16 rcvPong[N];
 
 #pragma DATA_ALIGN(xmtPing, 4);
 #pragma DATA_ALIGN(xmtPong, 4);
@@ -78,7 +78,7 @@ DMA_Config  dmaRcvConfig = {
     0,                                     /* DMACSSAU */  //Source start address (upper part)
     (DMA_AdrPtr)&rcvPing[0],                      /* DMACDSAL */   //Destination start address (lower part)
     0,                                     /* DMACDSAU */    //Destination start address (upper part)
-    2*N,                                     /* DMACEN   */ // Load DMACEN with the number of elements
+    N,                                     /* DMACEN   */ // Load DMACEN with the number of elements
     1,                                     /* DMACFN   */ //Load DMACFN with the number of frames you want in each block.
     0,                                     /* DMACFI   */
     0                                      /* DMACEI   */
@@ -119,7 +119,7 @@ DMA_Config  dmaXmtConfig = {
     0,                                     /* DMACSSAU */ //Source start address (upper part)
     (DMA_AdrPtr)(MCBSP_ADDR(DXR11)),       /* DMACDSAL */  //Destination start address (lower part)
     0,                                     /* DMACDSAU */   //Destination start address (upper part)
-    2*N,                                     /* DMACEN   */  // Load DMACEN with the number of elements you want in each frame.
+    N,                                     /* DMACEN   */  // Load DMACEN with the number of elements you want in each frame.
     1,                                     /* DMACFN   */  //Load DMACFN with the number of frames you want in each block.
     0,                                     /* DMACFI   */
     0                                      /* DMACEI   */
