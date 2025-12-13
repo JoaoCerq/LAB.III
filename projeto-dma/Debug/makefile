@@ -23,17 +23,18 @@ ORDERED_OBJS += \
 "./src/drivers/dma/dma.obj" \
 "./src/drivers/dma/vectors_dma4.obj" \
 "./src/drivers/lcd/LCD.obj" \
+"./src/effects/effect.obj" \
+"./src/effects/effect_dma.obj" \
 "./src/effects/tremolo.obj" \
 "./src/state_machine/state_machine.obj" \
 "./src/states/state_initial.obj" \
-"./src/states/state_offline.obj" \
-"./src/states/state_online.obj" \
+"./src/states/state_running.obj" \
 "../lnkx.cmd" \
 "../lib/csl5502x.lib" \
 "../lib/ezdsp5502bsl.lib" \
 $(GEN_CMDS__FLAG) \
--l"C:/Users/joao0/workspace_v12/Project/lib/csl5502x.lib" \
--l"C:/Users/joao0/workspace_v12/Project/lib/ezdsp5502bsl.lib" \
+-l"C:/Users/joao0/workspace_v12/Project/projeto-dma/lib/csl5502x.lib" \
+-l"C:/Users/joao0/workspace_v12/Project/projeto-dma/lib/ezdsp5502bsl.lib" \
 
 -include ../makefile.init
 
@@ -172,16 +173,16 @@ all: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 Project.out: $(OBJS) $(CMD_SRCS) $(LIB_SRCS) $(GEN_CMDS)
 	@echo 'Building target: "$@"'
 	@echo 'Invoking: C5500 Linker'
-	"C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/bin/cl55" -v5502 --memory_model=large -g --define=c5502 --define=CHIP_5502 --display_error_number --diag_warning=225 --ptrdiff_size=32 -z -m"Project.map" --stack_size=0x200 --heap_size=0x400 -i"C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/lib" -i"C:/Users/joao0/workspace_v12/Project/lib" -i"C:/Users/joao0/Downloads/ezdsp5502_v1/tests/lcd-osd9616" -i"C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/include" --reread_libs --display_error_number --warn_sections --xml_link_info="Project_linkInfo.xml" --rom_model --sys_stacksize=0x200 -o "Project.out" $(ORDERED_OBJS)
+	"C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/bin/cl55" -v5502 --memory_model=large -g --define=c5502 --define=CHIP_5502 --display_error_number --diag_warning=225 --ptrdiff_size=32 -z -m"Project.map" --stack_size=0x200 --heap_size=0x400 -i"C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/lib" -i"C:/Users/joao0/workspace_v12/Project/projeto-dma/lib" -i"C:/Users/joao0/Downloads/ezdsp5502_v1/tests/lcd-osd9616" -i"C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/include" --reread_libs --display_error_number --warn_sections --xml_link_info="Project_linkInfo.xml" --rom_model --sys_stacksize=0x200 -o "Project.out" $(ORDERED_OBJS)
 	@echo 'Finished building target: "$@"'
 	@echo ' '
 
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "lcd-osd9616\exemplo_uso.obj" "lcd-osd9616\lcd.obj" "lib\bsl\ezdsp5502.obj" "lib\bsl\ezdsp5502_gpio.obj" "lib\bsl\ezdsp5502_i2c.obj" "lib\bsl\ezdsp5502_i2cgpio.obj" "lib\bsl\ezdsp5502_mcbsp.obj" "src\drivers\aic\aic.obj" "src\drivers\aic\aic3204_init.obj" "src\drivers\dma\dma.obj" "src\drivers\dma\vectors_dma4.obj" "src\drivers\lcd\LCD.obj" "src\effects\tremolo.obj" "src\state_machine\state_machine.obj" "src\states\state_initial.obj" "src\states\state_offline.obj" "src\states\state_online.obj" 
+	-$(RM) "main.obj" "lcd-osd9616\exemplo_uso.obj" "lcd-osd9616\lcd.obj" "lib\bsl\ezdsp5502.obj" "lib\bsl\ezdsp5502_gpio.obj" "lib\bsl\ezdsp5502_i2c.obj" "lib\bsl\ezdsp5502_i2cgpio.obj" "lib\bsl\ezdsp5502_mcbsp.obj" "src\drivers\aic\aic.obj" "src\drivers\aic\aic3204_init.obj" "src\drivers\dma\dma.obj" "src\drivers\dma\vectors_dma4.obj" "src\drivers\lcd\LCD.obj" "src\effects\effect.obj" "src\effects\effect_dma.obj" "src\effects\tremolo.obj" "src\state_machine\state_machine.obj" "src\states\state_initial.obj" "src\states\state_running.obj" 
 	-$(RM) "src\drivers\dma\vectors_dma4.d" 
-	-$(RM) "main.d" "lcd-osd9616\exemplo_uso.d" "lcd-osd9616\lcd.d" "lib\bsl\ezdsp5502.d" "lib\bsl\ezdsp5502_gpio.d" "lib\bsl\ezdsp5502_i2c.d" "lib\bsl\ezdsp5502_i2cgpio.d" "lib\bsl\ezdsp5502_mcbsp.d" "src\drivers\aic\aic.d" "src\drivers\aic\aic3204_init.d" "src\drivers\dma\dma.d" "src\drivers\lcd\LCD.d" "src\effects\tremolo.d" "src\state_machine\state_machine.d" "src\states\state_initial.d" "src\states\state_offline.d" "src\states\state_online.d" 
+	-$(RM) "main.d" "lcd-osd9616\exemplo_uso.d" "lcd-osd9616\lcd.d" "lib\bsl\ezdsp5502.d" "lib\bsl\ezdsp5502_gpio.d" "lib\bsl\ezdsp5502_i2c.d" "lib\bsl\ezdsp5502_i2cgpio.d" "lib\bsl\ezdsp5502_mcbsp.d" "src\drivers\aic\aic.d" "src\drivers\aic\aic3204_init.d" "src\drivers\dma\dma.d" "src\drivers\lcd\LCD.d" "src\effects\effect.d" "src\effects\effect_dma.d" "src\effects\tremolo.d" "src\state_machine\state_machine.d" "src\states\state_initial.d" "src\states\state_running.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

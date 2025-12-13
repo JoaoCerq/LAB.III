@@ -19,18 +19,11 @@ void state_initial(MachineStates* state)
     EZDSP5502_I2CGPIO_configLine(  SW1, IN );
 
     /* Detect Switches */
-    if(!EZDSP5502_I2CGPIO_readLine(SW0))
-    {
-        while(!EZDSP5502_I2CGPIO_readLine(SW0));
-        printf("SW1 Pressed\n");
-        *state = ONLINE_STATE;
-        return;
-    }
     if(!EZDSP5502_I2CGPIO_readLine(SW1))
         {
             while(!EZDSP5502_I2CGPIO_readLine(SW1));
             printf("SW2 Pressed\n");
-            *state = OFFLINE_STATE;
+            *state = STATE_RUNNING;
             return;
         }
 }

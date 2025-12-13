@@ -7,10 +7,10 @@
 
 #include "tremolo.h"
 
-extern volatile Uint16 xmtPing[N*2];
-extern volatile Uint16 xmtPong[N*2];
-extern volatile Uint16 rcvPing[N];
-extern volatile Uint16 rcvPong[N];
+extern volatile Uint32 xmtPing[N];
+extern volatile Uint32 xmtPong[N];
+extern volatile Uint32 rcvPing[N];
+extern volatile Uint32 rcvPong[N];
 
 extern volatile Uint16 currentRxBuf; // 0 pra PING, 1 = PONG
 extern volatile Uint16 currentTxBuf;
@@ -92,14 +92,14 @@ void Tremolo_processIfReady(void)
 {
     // Buffer PING (indice 0)
     if (rxBufReady[0] && txBufEmpty[0]) {
-        Tremolo_processBlock(rcvPing, xmtPing, N);
+        //Tremolo_processBlock(rcvPing, xmtPing, N);
         rxBufReady[0] = 0;
         txBufEmpty[0] = 0;
     }
 
     // Buffer PONG (indice 1)
     if (rxBufReady[1] && txBufEmpty[1]) {
-        Tremolo_processBlock(rcvPong, xmtPong, N);
+        //Tremolo_processBlock(rcvPong, xmtPong, N);
         rxBufReady[1] = 0;
         txBufEmpty[1] = 0;
     }

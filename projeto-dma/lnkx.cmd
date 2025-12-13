@@ -1,6 +1,6 @@
--stack    0x2000      /* Primary stack size   */
--sysstack 0x1000      /* Secondary stack size */
--heap     0x2000      /* Heap area size       */
+-stack    0x0800      /* Primary stack size   (antes 0x2000) */
+-sysstack 0x0400      /* Secondary stack size (antes 0x1000) */
+-heap     0x0800      /* Heap area size       (antes 0x2000) */
 
 -c                    /* Use C linking conventions: auto-init vars at runtime */
 -u _Reset             /* Force load of reset interrupt handler                */
@@ -31,7 +31,7 @@ MEMORY
 }
 
 /*============================*/
-/*        SECTIONS             */
+/*        SECTIONS            */
 /*============================*/
 
 SECTIONS
@@ -39,7 +39,7 @@ SECTIONS
    /* Código */
    .text     >  DARAM align(32) fill = 20h { * (.text) }
 
-   .text1   >  DARAM align(32) fill = 20h
+   .text1    >  DARAM align(32) fill = 20h
 
    /* Primary system stack        */
    .stack    >  DARAM align(32) fill = 00h
@@ -58,8 +58,8 @@ SECTIONS
    /* Constant data               */
    .const    >  DARAM align(32) fill = 00h
 
-   /* Dynamic memory (malloc)     */
-   .sysmem   >  DARAM
+   /* Dynamic memory (malloc) – pode ficar em CE0 se quiser mais DARAM livre */
+   .sysmem   >  CE0   align(32)
 
    /* Switch statement tables     */
    .switch   >  DARAM
@@ -70,22 +70,22 @@ SECTIONS
    /* Initialization fn tables    */
    .pinit    >  DARAM align(32) fill = 00h
 
-   /* C I/O buffers               */
-   .cio      >  DARAM align(32) fill = 00h
+   /* C I/O buffers – pode ir pra CE0 também, não é crítico */
+   .cio      >  CE0 align(32) fill = 00h
 
    /* Arguments to main()         */
    .args     >  DARAM align(32) fill = 00h
 
    /* interrupt vector table must be on 256 "page" boundry */
    vectors   >  VECS
-   .vectors   >  VECS
+   .vectors  >  VECS
+
    /* Global & static ioport vars */
    .ioport   >  IOPORT PAGE 2
 
-   /* ========= SEÇÃO EXTRA DO EXEMPLO DMA =========
-    * Qualquer coisa marcada no código com:
-    *   #pragma DATA_SECTION(algumaCoisa, "dmaMem");
-    * vai cair aqui.
-    */
+   /* Buffers de DMA de áudio (ping-pong), internos e rápidos */
    dmaMem    >  DARAM align(32) fill = 00h
+
+   /* Buffers grandes do REVERB (Q15), em SDRAM externa (CE0) */
+   .reverbMem > CE0 align(32) fill = 00h
 }

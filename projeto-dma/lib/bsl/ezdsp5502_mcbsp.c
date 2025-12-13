@@ -75,28 +75,28 @@ Int16 EZDSP5502_MCBSP_init( )
           MCBSP_SPCR2_XRST_DISABLE      // XRST   = 0
           ),
         MCBSP_RCR1_RMK(
-          MCBSP_RCR1_RFRLEN1_OF(1),     // RFRLEN1 = 1 (2 Words)
-          MCBSP_RCR1_RWDLEN1_16BIT      // RWDLEN1 = 2 (16-bit)
+          MCBSP_RCR1_RFRLEN1_OF(0),     // RFRLEN1 = 1 (2 Words)
+          MCBSP_RCR1_RWDLEN1_32BIT      // RWDLEN1 = 2 (16-bit)
           ),
         MCBSP_RCR2_RMK(
           MCBSP_RCR2_RPHASE_SINGLE,     // RPHASE  = 0 (Single Phase)
           MCBSP_RCR2_RFRLEN2_OF(0),     // RFRLEN2 = 0
-          MCBSP_RCR2_RWDLEN2_8BIT,      // RWDLEN2 = 0
+          MCBSP_RCR2_RWDLEN2_16BIT,      // RWDLEN2 = 0
           MCBSP_RCR2_RCOMPAND_MSB,      // RCOMPAND = 0
           MCBSP_RCR2_RFIG_YES,          // RFIG    = 0
           MCBSP_RCR2_RDATDLY_1BIT       // RDATDLY = 11 (1-bit delay)
           ),
         MCBSP_XCR1_RMK(
-          MCBSP_XCR1_XFRLEN1_OF(1),     // XFRLEN1 = 1 (2 Words)
-          MCBSP_XCR1_XWDLEN1_16BIT      // XWDLEN1 = 2 (16-bit)
+          MCBSP_XCR1_XFRLEN1_OF(0),     // XFRLEN1 = 1 (2 Words)
+          MCBSP_XCR1_XWDLEN1_32BIT      // XWDLEN1 = 2 (16-bit)
           ),
         MCBSP_XCR2_RMK(
           MCBSP_XCR2_XPHASE_SINGLE,     // XPHASE  = 0 (Single Phase)
           MCBSP_XCR2_XFRLEN2_OF(0),     // XFRLEN2 = 0
-          MCBSP_XCR2_XWDLEN2_8BIT,      // XWDLEN2 = 0
+          MCBSP_XCR2_XWDLEN2_16BIT,      // XWDLEN2 = 0
           MCBSP_XCR2_XCOMPAND_MSB,      // XCOMPAND= 0
           MCBSP_XCR2_XFIG_YES,          // XFIG    = 0
-          MCBSP_RCR2_RDATDLY_1BIT       // XDATDLY = 1 (1-bit delay)
+          MCBSP_XCR2_XDATDLY_1BIT       // XDATDLY = 1 (1-bit delay)
           ),
         MCBSP_SRGR1_RMK(
           MCBSP_SRGR1_FWID_OF(0),      // FWID    = 0 (All Clocks External)

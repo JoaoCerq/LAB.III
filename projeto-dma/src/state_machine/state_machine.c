@@ -6,46 +6,39 @@
  */
 
 #include "../states/state_initial.h"
-#include "../states/state_online.h"
-#include "../states/state_offline.h"
+#include "../states/state_running.h"
 
-
+MachineStates state = STATE_INITIAL;
+MachineStates previous = (MachineStates)(-1); // valor inválido só pra começar
 
 void state_machine()
 {
-    MachineStates state = INITIAL_STATE;
-    MachineStates previous = (MachineStates)(-1); // valor inválido só pra começar
+
     while(1)
     {
         if (state != previous)
         {
             switch(state)
             {
-                case INITIAL_STATE:
+                case STATE_INITIAL:
                     state_initial_enter();
                     break;
-                case ONLINE_STATE:
-                    state_online_enter();
-                    break;
-                case OFFLINE_STATE:
-                    state_offline_enter();
+                case STATE_RUNNING:
+                    state_running_enter();
                     break;
             }
             previous = state;
         }
         switch(state)
         {
-            case INITIAL_STATE:
+            case STATE_INITIAL:
                 state_initial(&state);
                 break;
-            case ONLINE_STATE:
-                state_online(&state);
-                break;
-            case OFFLINE_STATE:
-                state_offline(&state);
+            case STATE_RUNNING:
+                state_running(&state);
                 break;
             default:
-                state = INITIAL_STATE;
+                state = STATE_INITIAL;
         }
 
     }

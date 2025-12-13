@@ -22,13 +22,18 @@
 
 /* Define transmit and receive buffers */
 #pragma DATA_SECTION(xmtPing,"dmaMem")
-volatile Uint16 xmtPing[N*2];
+volatile Uint16 xmtPing[2*N];
 #pragma DATA_SECTION(xmtPong,"dmaMem")
-volatile Uint16 xmtPong[N*2];
+volatile Uint16 xmtPong[2*N];
 #pragma DATA_SECTION(rcvPing,"dmaMem")
-volatile Uint16 rcvPing[N];
+volatile Uint16 rcvPing[2*N];
 #pragma DATA_SECTION(rcvPong,"dmaMem")
-volatile Uint16 rcvPong[N];
+volatile Uint16 rcvPong[2*N];
+
+#pragma DATA_ALIGN(xmtPing, 4);
+#pragma DATA_ALIGN(xmtPong, 4);
+#pragma DATA_ALIGN(rcvPing, 4);
+#pragma DATA_ALIGN(rcvPong, 4);
 
 volatile Uint16 currentRxBuf = 0; // 0 pra PING, 1 = PONG
 volatile Uint16 currentTxBuf = 0;
@@ -71,9 +76,9 @@ DMA_Config  dmaRcvConfig = {
   ),                                       /* DMACICR  */
     (DMA_AdrPtr)(MCBSP_ADDR(DRR11)),        /* DMACSSAL */ //Source start address (lower part)
     0,                                     /* DMACSSAU */  //Source start address (upper part)
-    (DMA_AdrPtr)&rcvPing,                      /* DMACDSAL */   //Destination start address (lower part)
+    (DMA_AdrPtr)&rcvPing[0],                      /* DMACDSAL */   //Destination start address (lower part)
     0,                                     /* DMACDSAU */    //Destination start address (upper part)
-    N,                                     /* DMACEN   */ // Load DMACEN with the number of elements
+    2*N,                                     /* DMACEN   */ // Load DMACEN with the number of elements
     1,                                     /* DMACFN   */ //Load DMACFN with the number of frames you want in each block.
     0,                                     /* DMACFI   */
     0                                      /* DMACEI   */
@@ -87,7 +92,7 @@ DMA_Config  dmaXmtConfig = {
     DMA_DMACSDP_SRCBEN_NOBURST, //Isso permitiria varios acessos de uma so vez, mas o McDSP nao suporta. Essa config desliga isso.
     DMA_DMACSDP_SRCPACK_OFF,  //empacotamento tbm
     DMA_DMACSDP_SRC_DARAMPORT0, // Define de onde o DMA esta lendo. Ta lendo da RAM pela porta 0
-    DMA_DMACSDP_DATATYPE_32BIT //o tamanho do data. Vamos deixar em 16 pra otimizar?(ALTERADO)
+    DMA_DMACSDP_DATATYPE_16BIT //o tamanho do data. Vamos deixar em 16 pra otimizar?(ALTERADO)
   ),                                       /* DMACSDP  */
   DMA_DMACCR_RMK(
     DMA_DMACCR_DSTAMODE_CONST, // Modo de enderecamento do destino. Const pois o endereco eh o do McBSP.
@@ -114,7 +119,7 @@ DMA_Config  dmaXmtConfig = {
     0,                                     /* DMACSSAU */ //Source start address (upper part)
     (DMA_AdrPtr)(MCBSP_ADDR(DXR11)),       /* DMACDSAL */  //Destination start address (lower part)
     0,                                     /* DMACDSAU */   //Destination start address (upper part)
-    N,                                     /* DMACEN   */  // Load DMACEN with the number of elements you want in each frame.
+    2*N,                                     /* DMACEN   */  // Load DMACEN with the number of elements you want in each frame.
     1,                                     /* DMACFN   */  //Load DMACFN with the number of frames you want in each block.
     0,                                     /* DMACFI   */
     0                                      /* DMACEI   */
@@ -149,13 +154,6 @@ void dma_init(void)
 
     /* Set IVPH/IVPD to start of interrupt vector table */
     IRQ_setVecs((Uint32)(&VECSTART));
-
-    for (i = 0; i <= N - 1; i++) {
-        xmtPing[i] =  0;
-        xmtPong[i] =  0;
-        rcvPing[i] = 0;
-        rcvPong[i] = 0;
-    }
 
     /* Call function to effect transfer */
     taskFxn();
@@ -246,9 +244,9 @@ void taskFxn(void)
     DMA_start(hDmaXmt);
 
     /* Take MCBSP transmit and receive out of reset */
-    MCBSP_start(hMcbsp,
-                MCBSP_XMIT_START | MCBSP_RCV_START,
-                0u);
+    //MCBSP_start(hMcbsp,
+    //            MCBSP_XMIT_START | MCBSP_RCV_START,
+    //            0u);
 
 //     IRQ_globalRestore(old_intm);
 //
@@ -264,68 +262,72 @@ volatile Uint32 dmaXmtCount = 0;
 
 
 interrupt void dmaXmtIsr(void) {
-    if (currentTxBuf == 0) // 0 eh ping. Na chamada, o Ping esta sendo enviado e devemos trocar pro buffer do Pong.
-    {
-        srcAddrHi = (Uint16)(((Uint32)(&xmtPong[0])) >> 15) & 0xFFFFu;
-        srcAddrLo = (Uint16)(((Uint32)(&xmtPong[0])) << 1) & 0xFFFFu;
+    // Calculamos os endereços
+    Uint32 addrPing = ((Uint32)(&xmtPing[0]) << 1);
+    Uint32 addrPong = ((Uint32)(&xmtPong[0]) << 1);
 
-        dmaXmtConfig.dmacssal = (DMA_AdrPtr)srcAddrLo;
-        dmaXmtConfig.dmacssau = srcAddrHi;
+    IRQ_clear(xmtEventId);
+
+    Uint16 addrLo, addrHi;
+
+    // Se acabamos de enviar o PING (0), vamos preparar o PONG (1)
+    if (currentTxBuf == 0)
+    {
+        addrLo = (Uint16)(addrPong & 0xFFFF);
+        addrHi = (Uint16)(addrPong >> 16);
+
+        DMA_RSETH(hDmaXmt, DMACSSAL, addrLo);
+        DMA_RSETH(hDmaXmt, DMACSSAU, addrHi);
 
         currentTxBuf = 1;
-
-
-        DMA_config(hDmaXmt,&dmaXmtConfig);
-        DMA_start(hDmaXmt);
-        txBufEmpty[0] = 1; // Flag que indica que o buffer no Ping agora esta vazio
-
+        txBufEmpty[0] = 1;
     }
-    else if (currentTxBuf == 1) // Ou seja, agora, o Pong esta sendo enviado e devemos mudar para o Ping
+    else // Acabamos de enviar o PONG (1), vamos preparar o PING (0)
     {
-        srcAddrHi = (Uint16)(((Uint32)(&xmtPing[0])) >> 15) & 0xFFFFu;
-        srcAddrLo = (Uint16)(((Uint32)(&xmtPing[0])) << 1) & 0xFFFFu;
+        addrLo = (Uint16)(addrPing & 0xFFFF);
+        addrHi = (Uint16)(addrPing >> 16);
 
-        dmaXmtConfig.dmacssal = (DMA_AdrPtr)srcAddrLo;
-        dmaXmtConfig.dmacssau = srcAddrHi;
+        DMA_RSETH(hDmaXmt, DMACSSAL, addrLo);
+        DMA_RSETH(hDmaXmt, DMACSSAU, addrHi);
 
         currentTxBuf = 0;
-
-
-        DMA_config(hDmaXmt,&dmaXmtConfig);
-        DMA_start(hDmaXmt);
-        txBufEmpty[1] = 1; // Flag que indica que o buffer no Pong agora esta vazio
-
+        txBufEmpty[1] = 1; // Libera o Pong
     }
 
+    // Apenas reinicia. O Config já está feito.
+    DMA_start(hDmaXmt);
 }
 
 interrupt void dmaRcvIsr(void) {
-    if (currentRxBuf == 0) // 0 eh ping. Na chamada, o ping ficou cheio e devemos trocar pro buffer do pong.
-    {
-        dstAddrHi = (Uint16)(((Uint32)(&rcvPong[0])) >> 15) & 0xFFFFu;
-        dstAddrLo = (Uint16)(((Uint32)(&rcvPong[0])) << 1) & 0xFFFFu;
+    Uint32 addrPing = ((Uint32)(&rcvPing[0]) << 1);
+    Uint32 addrPong = ((Uint32)(&rcvPong[0]) << 1);
+    Uint16 addrLo, addrHi;
 
-        dmaRcvConfig.dmacdsal = (DMA_AdrPtr)dstAddrLo;
-        dmaRcvConfig.dmacdsau = dstAddrHi;
+    IRQ_clear(rcvEventId);
+
+    if (currentRxBuf == 0) // Encheu o Ping, vamos jogar o DMA pro Pong
+    {
+        addrLo = (Uint16)(addrPong & 0xFFFF);
+        addrHi = (Uint16)(addrPong >> 16);
+
+        // Aqui mudamos o DESTINO (CDSA), pois estamos recebendo do McBSP
+        DMA_RSETH(hDmaRcv, DMACDSAL, addrLo);
+        DMA_RSETH(hDmaRcv, DMACDSAU, addrHi);
 
         currentRxBuf = 1;
-
-        rxBufReady[0] = 1; // Flag que indica que o buffer no Ping esta pronto para ser processado
+        rxBufReady[0] = 1; // Avisa o main que o Ping tá cheio de dados novos
     }
-    else if (currentRxBuf == 1) // Ou seja, agora, o Pong ficou cheio e devemos mudar para o Ping
+    else // Encheu o Pong, volta pro Ping
     {
-        dstAddrHi = (Uint16)(((Uint32)(&rcvPing[0])) >> 15) & 0xFFFFu;
-        dstAddrLo = (Uint16)(((Uint32)(&rcvPing[0])) << 1) & 0xFFFFu;
+        addrLo = (Uint16)(addrPing & 0xFFFF);
+        addrHi = (Uint16)(addrPing >> 16);
 
-        dmaRcvConfig.dmacdsal = (DMA_AdrPtr)dstAddrLo;
-        dmaRcvConfig.dmacdsau = dstAddrHi;
-
+        DMA_RSETH(hDmaRcv, DMACDSAL, addrLo);
+        DMA_RSETH(hDmaRcv, DMACDSAU, addrHi);
 
         currentRxBuf = 0;
-
-        rxBufReady[1] = 1; // Flag que indica que o buffer no Pong esta pronto para ser processado
+        rxBufReady[1] = 1; // Avisa o main que o Pong tá cheio
     }
 
-    DMA_config(hDmaRcv,&dmaRcvConfig);
     DMA_start(hDmaRcv);
 }

@@ -4,5 +4,5 @@
 
 USER_OBJS :=
 
-LIBS := -l"C:/Users/joao0/workspace_v12/Project/lib/csl5502x.lib" -l"C:/Users/joao0/workspace_v12/Project/lib/ezdsp5502bsl.lib"
+LIBS := -l"C:/Users/joao0/workspace_v12/Project/projeto-dma/lib/csl5502x.lib" -l"C:/Users/joao0/workspace_v12/Project/projeto-dma/lib/ezdsp5502bsl.lib"
 

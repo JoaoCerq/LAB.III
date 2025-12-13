@@ -12,7 +12,7 @@ src/effects/tremolo.obj: C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/include/el
 src/effects/tremolo.obj: C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/include/mathf.h
 src/effects/tremolo.obj: C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/include/mathl.h
 src/effects/tremolo.obj: C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/include/unaccess.h
-src/effects/tremolo.obj: C:/Users/joao0/workspace_v12/Project/include/tistdtypes.h
+src/effects/tremolo.obj: C:/Users/joao0/workspace_v12/Project/projeto-dma/include/tistdtypes.h
 
 ../src/effects/tremolo.c:
 
@@ -38,5 +38,5 @@ C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/include/mathl.h:
 
 C:/ti/ccs1281/ccs/tools/compiler/c5500_4.4.1/include/unaccess.h:
 
-C:/Users/joao0/workspace_v12/Project/include/tistdtypes.h:
+C:/Users/joao0/workspace_v12/Project/projeto-dma/include/tistdtypes.h:
 

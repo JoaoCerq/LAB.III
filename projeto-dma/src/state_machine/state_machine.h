@@ -11,9 +11,8 @@
 void state_machine();
 
 typedef enum {
-    INITIAL_STATE,
-    ONLINE_STATE,
-    OFFLINE_STATE
+    STATE_INITIAL,
+    STATE_RUNNING
 } MachineStates;
 
 

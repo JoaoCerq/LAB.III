@@ -64,7 +64,7 @@ Int16 aic3204_init( )
     AIC3204_rset( 0, 1 );      // Select page 1
     AIC3204_rset( 1, 8 );      // Disable crude AVDD generation from DVDD
     AIC3204_rset( 2, 1 );      // Enable Analog Blocks, use LDO power
-    AIC3204_rset( 0, 0 );
+    AIC3204_rset( 0, 0 );      // Select page 0
 
     /* PLL and Clocks config and Power Up  */
     AIC3204_rset( 27, 0x0d );  // BCLK and WCLK are set as o/p; AIC3204(Master)
@@ -111,8 +111,8 @@ Int16 aic3204_init( )
 
     // ver p�gina 134 https://www.ti.com/lit/ml/slaa557/slaa557.pdf
     AIC3204_rset( 51, 0x60 ); // tentar 0x60
-    AIC3204_rset( 59, 0x5f ); // 5db = 0x0a, 10db = 0x14, 20db = 0x28
-    AIC3204_rset( 60, 0x5f );
+    AIC3204_rset( 59, 0x00 ); // 5db = 0x0a, 10db = 0x14, 20db = 0x28
+    AIC3204_rset( 60, 0x00 );
 
     AIC3204_rset( 0, 0 );      // Select page 0
     AIC3204_rset( 0x51, 0xc0 );// Powerup Left and Right ADC
@@ -125,8 +125,8 @@ Int16 aic3204_init( )
     
     /* Play Loopback for 5 seconds */
     data = 0;
-    dataLeft = 0;
-    dataRight = 0;
+//    dataLeft = 0;
+//    dataRight = 0;
 //    for ( sec = 0 ; sec < 30 ; sec++ )
 //    {
 //        for ( msec = 0 ; msec < 1000 ; msec++ )
