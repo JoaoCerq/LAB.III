@@ -16,13 +16,13 @@
 
 #define ROOM_SIZE 0.9f    // Tamanho da sala (0.0 a 1.0). Maior = eco mais longo;.
 #define DAMPING 0.1f      // Abafamento (0.0 a 1.0). 0.0 = som limpo; 1.0 = som abafado.
-#define WET_LEVEL 0.25f    // Volume do efeito (0.0 a 1.0). Quanto de "eco" você quer ouvir na mistura.
+#define WET_LEVEL 0.25f    // Volume do efeito (0.0 a 1.0). Quanto de "eco" vocï¿½ quer ouvir na mistura.
 #define DRY_LEVEL 0.75f    // Volume do som original (0.0 a 1.0). (Geralmente soma-se Wet+Dry <= 1.0).
 
-#define PITCH_FACTOR 2.0f // Mudança de tom
+#define TARGET_NOTE 220.65f // FrequÃªncia alvo em Hz
 
 #include <src/effects/reverb.h>
-#include <src/effects/pitch_shifter.h>
+#include <src/effects/autotune.h>
 
 void running_lcd();
 void effects_initDMA(float room_size,
@@ -61,7 +61,7 @@ void state_running_enter()
                 DAMPING,   // damping
                 WET_LEVEL,   // wet_level
                 DRY_LEVEL, // dry_level
-                PITCH_FACTOR); //do pitch
+                TARGET_NOTE); //do autotune
 }
 
 

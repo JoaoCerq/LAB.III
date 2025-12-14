@@ -1,124 +1,339 @@
-#include <stdint.h>
-#include <stdio.h>
+#include <src/effects/reverb.h>
 #include "tistdtypes.h"
-#include "reverb.h"
+#include "c55x.h"      /* Intrinsics da família C55x */
 
-// ==============================================================================
-// Funções Auxiliares de Processamento
-// ==============================================================================
+/* =========================================================================
+ * Buffers estáticos (delay lines) dos filtros comb e allpass
+ * ========================================================================= */
 
-// Processamento do Filtro Comb com Buffer Circular Otimizado
-float process_comb(comb_filter_t *comb, float input, float damp, float feedback) {
-    float output = comb->buffer[comb->idx];
-    
-    // Low-pass filter no feedback (Damping)
-    comb->last = (output * (1.0f - damp)) + (comb->last * damp);
-    
-    // JUCE usa proteção contra denormalização, omitido aqui para simplicidade em C puro,
-    // mas em DSPs dedicados pode ser necessário flush-to-zero.
-    
-    float temp = input + (comb->last * feedback);
-    
-    comb->buffer[comb->idx] = temp;
-    
-    // Incremento circular sem módulo (mais rápido que %)
-    comb->idx++;
-    if (comb->idx >= comb->size) {
-        comb->idx = 0;
-    }
-    
-    return output;
-}
+#pragma DATA_ALIGN(combBuf0,2);
+#pragma DATA_ALIGN(combBuf1,2);
+#pragma DATA_ALIGN(combBuf2,2);
+#pragma DATA_ALIGN(combBuf3,2);
+#pragma DATA_ALIGN(combBuf4,2);
+#pragma DATA_ALIGN(combBuf5,2);
+#pragma DATA_ALIGN(combBuf6,2);
+#pragma DATA_ALIGN(combBuf7,2);
 
-// Processamento do Filtro All-Pass
-float process_allpass(allpass_filter_t *ap, float input) {
-    float buffered_val = ap->buffer[ap->idx];
-    
-    float temp = input + (buffered_val * 0.5f);
-    
-    ap->buffer[ap->idx] = temp;
-    
-    ap->idx++;
-    if (ap->idx >= ap->size) {
-        ap->idx = 0;
-    }
-    
-    return buffered_val - input;
-}
+#pragma DATA_SECTION(combBuf0, ".reverbMem")
+static Int16 combBuf0[COMB_BUF_0];
+#pragma DATA_SECTION(combBuf1, ".reverbMem")
+static Int16 combBuf1[COMB_BUF_1];
+#pragma DATA_SECTION(combBuf2, ".reverbMem")
+static Int16 combBuf2[COMB_BUF_2];
+#pragma DATA_SECTION(combBuf3, ".reverbMem")
+static Int16 combBuf3[COMB_BUF_3];
+#pragma DATA_SECTION(combBuf4, ".reverbMem")
+static Int16 combBuf4[COMB_BUF_4];
+#pragma DATA_SECTION(combBuf5, ".reverbMem")
+static Int16 combBuf5[COMB_BUF_5];
+#pragma DATA_SECTION(combBuf6, ".reverbMem")
+static Int16 combBuf6[COMB_BUF_6];
+#pragma DATA_SECTION(combBuf7, ".reverbMem")
+static Int16 combBuf7[COMB_BUF_7];
 
-// Atualiza coeficientes internos para evitar recálculo por amostra
-void update_internal_params(reverb_params_t *p) {
-    // Mapeamento idêntico ao JUCE setParameters
-    float wet = p->wet_level * WET_SCALE_FACTOR;
-    
-    p->gain_dry = p->dry_level * DRY_SCALE_FACTOR;
-    p->gain_wet1 = 0.5f * wet;
-    p->gain_wet2 = 0.5f * wet;
+#pragma DATA_ALIGN(apBuf0,2);
+#pragma DATA_ALIGN(apBuf1,2);
+#pragma DATA_ALIGN(apBuf2,2);
+#pragma DATA_ALIGN(apBuf3,2);
 
-    p->gain_damp = p->damping * DAMP_SCALE_FACTOR;
-    p->gain_room = (p->room_size * ROOM_SCALE_FACTOR) + ROOM_OFFSET;
-}
+#pragma DATA_SECTION(apBuf0, ".reverbMem")
+static Int16 apBuf0[AP_BUF_0];
+#pragma DATA_SECTION(apBuf1, ".reverbMem")
+static Int16 apBuf1[AP_BUF_1];
+#pragma DATA_SECTION(apBuf2, ".reverbMem")
+static Int16 apBuf2[AP_BUF_2];
+#pragma DATA_SECTION(apBuf3, ".reverbMem")
+static Int16 apBuf3[AP_BUF_3];
 
-// ==============================================================================
-// Implementação das Funções Solicitadas
-// ==============================================================================
+/* =========================================================================
+ * Helpers de saturação / Q15 e intrinsics
+ * ========================================================================= */
 
-void reverb_init(float room_size, float damping, float wet_level, float dry_level, reverb_params_t *r_params)
+/* Saturação manual 32 → Q15 (usada quando acumulamos em 32 bits) */
+static inline Int16 sat_q15(Int32 x)
 {
-    // Definir Parâmetros Iniciais
-    r_params->room_size = room_size;
-    r_params->damping = damping;
-    r_params->wet_level = wet_level;
-    r_params->dry_level = dry_level;
+    if (x > 32767)  return 32767;
+    if (x < -32768) return -32768;
+    return (Int16)x;
+}
 
-    // Configurar Tunings (Tamanhos dos Buffers)
-    // Valores fixos para 44.1kHz conforme FreeVerb
-    const int comb_tunings[] = { 1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617 };
-    const int allpass_tunings[] = { 556, 441, 341, 225 };
+/* Multiplicação Q15 usando intrinsic saturada fracionária */
+static inline Int16 q15_mul(Int16 a, Int16 b)
+{
+    /* _smpy: produto fracionário saturado Q15 * Q15 -> Q15 */
+    return _smpy(a, b);
+}
 
-    for (int i = 0; i < NUM_COMBS; i++) {
-        r_params->combs[i].size = comb_tunings[i];
-        r_params->combs[i].idx = 0;
-        r_params->combs[i].last = 0.0f;
+/* Soma Q15 saturada */
+static inline Int16 q15_add(Int16 a, Int16 b)
+{
+    /* _sadd: soma saturada de 16 bits */
+    return _sadd(a, b);
+}
+
+/* Subtração Q15 saturada */
+static inline Int16 q15_sub(Int16 a, Int16 b)
+{
+    /* _ssub: subtração saturada de 16 bits */
+    return _ssub(a, b);
+}
+
+/* Conversão float [-1,1) -> Q15 (só usada na init, não em tempo real) */
+static Int16 float_to_q15(float x)
+{
+    if (x >= 0.999969f)
+        return 32767;
+    if (x <= -1.0f)
+        return -32768;
+
+    float scaled = x * 32768.0f;
+    if (scaled >  32767.0f) scaled =  32767.0f;
+    if (scaled < -32768.0f) scaled = -32768.0f;
+
+    return (Int16)(scaled);
+}
+
+/* =========================================================================
+ * Atualização dos parâmetros internos (gains em Q15)
+ * ========================================================================= */
+
+static void update_internal_params(reverb_params_t *p)
+{
+    Int32 tmp;
+
+    /* gain_dry ≈ dry_level * 2.0  (shift à esquerda de 1) */
+    tmp = ((Int32)p->dry_level) << 1;   /* Q15 * 2 -> ainda Q15 com possível saturação */
+    p->gain_dry = sat_q15(tmp);
+
+    /* gain_wet1 ≈ wet_level * 3.0  (3 = 2 + 1, aqui deixei igual ao seu código antigo) */
+    tmp = (Int32)p->wet_level * 3;
+    p->gain_wet1 = sat_q15(tmp);
+
+    /* gain_damp = damping * DAMP_SCALE (Q15 * Q15) */
+    p->gain_damp = q15_mul(p->damping, DAMP_SCALE_Q15);
+
+    /* gain_room = room_size * ROOM_SCALE + ROOM_OFFSET (tudo em Q15) */
+    {
+        Int16 scaled = q15_mul(p->room_size, ROOM_SCALE_Q15);
+        p->gain_room = q15_add(scaled, ROOM_OFFSET_Q15);
     }
+}
 
-    for (int i = 0; i < NUM_ALLPASS; i++) {
-        r_params->allpasses[i].size = allpass_tunings[i];
-        r_params->allpasses[i].idx = 0;
-    }
+/* =========================================================================
+ * Filtro COMB em Q15 usando intrinsics
+ * ========================================================================= */
 
-    // Calcular ganhos iniciais
+static Int16 process_comb(comb_filter_t *comb,
+                          Int16 input_q15,
+                          Int16 damp_q15,
+                          Int16 feedback_q15)
+{
+    Int16 output = comb->buffer[comb->idx];   /* Q15 */
+    Int16 one_minus_damp;
+    Int16 term1, term2;
+    Int16 fb_term;
+
+    /* one_minus_damp = 1.0 - damp (em Q15) */
+    one_minus_damp = (Int16)(Q15_ONE - damp_q15);
+
+    /* comb->last = output * (1 - damp) + last * damp;
+     * tudo em Q15 com intrinsics fracionários
+     */
+    term1 = q15_mul(output,     one_minus_damp); /* Q15 */
+    term2 = q15_mul(comb->last, damp_q15);       /* Q15 */
+    comb->last = q15_add(term1, term2);          /* saturado */
+
+    /* temp = input + last * feedback */
+    fb_term = q15_mul(comb->last, feedback_q15); /* Q15 */
+    comb->buffer[comb->idx] = q15_add(input_q15, fb_term);
+
+    /* índice circular */
+    comb->idx++;
+    if (comb->idx >= comb->size)
+        comb->idx = 0;
+
+    return output;  /* Q15 */
+}
+
+/* =========================================================================
+ * Filtro ALLPASS em Q15 usando intrinsics
+ * y[n] = -x[n] + z[n-D]
+ * z[n] = x[n] + 0.5 * z[n-D]
+ * ========================================================================= */
+
+static Int16 process_allpass(allpass_filter_t *ap,
+                             Int16 input_q15)
+{
+    Int16 buf_val = ap->buffer[ap->idx];  /* Q15 */
+    Int16 half_buf;
+    Int16 temp;
+
+    /* temp = input + 0.5 * buf_val  (0.5 => >>1)  */
+    half_buf = (Int16)(buf_val >> 1);        /* Q15/2 */
+    temp     = q15_add(input_q15, half_buf); /* saturado */
+    ap->buffer[ap->idx] = temp;
+
+    /* índice circular */
+    ap->idx++;
+    if (ap->idx >= ap->size)
+        ap->idx = 0;
+
+    /* saída: buf_val - input */
+    return q15_sub(buf_val, input_q15);
+}
+
+/* =========================================================================
+ * Inicialização do reverb (externa)
+ * ========================================================================= */
+
+void reverb_init(reverb_params_t *r_params,
+                 float room_size,
+                 float damping,
+                 float wet_level,
+                 float dry_level)
+{
+    Int16 i;
+
+    /* 1) Converte parâmetros float [0,1] pra Q15 */
+    r_params->room_size = float_to_q15(room_size);
+    r_params->damping   = float_to_q15(damping);
+    r_params->wet_level = float_to_q15(wet_level);
+    r_params->dry_level = float_to_q15(dry_level);
+
+    /* 2) Zera buffers e estados */
+    for (i = 0; i < COMB_BUF_0; i++) combBuf0[i] = 0;
+    for (i = 0; i < COMB_BUF_1; i++) combBuf1[i] = 0;
+    for (i = 0; i < COMB_BUF_2; i++) combBuf2[i] = 0;
+    for (i = 0; i < COMB_BUF_3; i++) combBuf3[i] = 0;
+    for (i = 0; i < COMB_BUF_4; i++) combBuf4[i] = 0;
+    for (i = 0; i < COMB_BUF_5; i++) combBuf5[i] = 0;
+    for (i = 0; i < COMB_BUF_6; i++) combBuf6[i] = 0;
+    for (i = 0; i < COMB_BUF_7; i++) combBuf7[i] = 0;
+
+    for (i = 0; i < AP_BUF_0; i++) apBuf0[i] = 0;
+    for (i = 0; i < AP_BUF_1; i++) apBuf1[i] = 0;
+    for (i = 0; i < AP_BUF_2; i++) apBuf2[i] = 0;
+    for (i = 0; i < AP_BUF_3; i++) apBuf3[i] = 0;
+
+    /* 3) Liga buffers às estruturas COMB */
+    r_params->combs[0].buffer = combBuf0;
+    r_params->combs[0].size   = COMB_BUF_0;
+    r_params->combs[0].idx    = 0;
+    r_params->combs[0].last   = 0;
+
+    r_params->combs[1].buffer = combBuf1;
+    r_params->combs[1].size   = COMB_BUF_1;
+    r_params->combs[1].idx    = 0;
+    r_params->combs[1].last   = 0;
+
+    r_params->combs[2].buffer = combBuf2;
+    r_params->combs[2].size   = COMB_BUF_2;
+    r_params->combs[2].idx    = 0;
+    r_params->combs[2].last   = 0;
+
+    r_params->combs[3].buffer = combBuf3;
+    r_params->combs[3].size   = COMB_BUF_3;
+    r_params->combs[3].idx    = 0;
+    r_params->combs[3].last   = 0;
+
+    r_params->combs[4].buffer = combBuf4;
+    r_params->combs[4].size   = COMB_BUF_4;
+    r_params->combs[4].idx    = 0;
+    r_params->combs[4].last   = 0;
+
+    r_params->combs[5].buffer = combBuf5;
+    r_params->combs[5].size   = COMB_BUF_5;
+    r_params->combs[5].idx    = 0;
+    r_params->combs[5].last   = 0;
+
+    r_params->combs[6].buffer = combBuf6;
+    r_params->combs[6].size   = COMB_BUF_6;
+    r_params->combs[6].idx    = 0;
+    r_params->combs[6].last   = 0;
+
+    r_params->combs[7].buffer = combBuf7;
+    r_params->combs[7].size   = COMB_BUF_7;
+    r_params->combs[7].idx    = 0;
+    r_params->combs[7].last   = 0;
+
+    /* 4) Liga buffers às estruturas ALLPASS */
+    r_params->allpasses[0].buffer = apBuf0;
+    r_params->allpasses[0].size   = AP_BUF_0;
+    r_params->allpasses[0].idx    = 0;
+
+    r_params->allpasses[1].buffer = apBuf1;
+    r_params->allpasses[1].size   = AP_BUF_1;
+    r_params->allpasses[1].idx    = 0;
+
+    r_params->allpasses[2].buffer = apBuf2;
+    r_params->allpasses[2].size   = AP_BUF_2;
+    r_params->allpasses[2].idx    = 0;
+
+    r_params->allpasses[3].buffer = apBuf3;
+    r_params->allpasses[3].size   = AP_BUF_3;
+    r_params->allpasses[3].idx    = 0;
+
+    /* 5) Calcula ganhos internos já em Q15 */
     update_internal_params(r_params);
 }
 
-float reverb_process(float input_sample, reverb_params_t *r_params)
+/* =========================================================================
+ * Processamento de 1 amostra em Q15 com intrinsics
+ * ========================================================================= */
+
+Int16 reverb_process(reverb_params_t *r_params, Int16 input_sample)
 {
-    // 1. Converter Int16 para Float (-1.0 a 1.0) e aplicar Input Gain
-    // O JUCE usa um ganho fixo de 0.015f na entrada do algoritmo
-    float input = input_sample * FIXED_GAIN;
-    
-    float output_accum = 0.0f;
+    //return input_sample;
+    Int16 i;
+    Int32 acc32;
+    Int16 combOut;
+    Int16 apOut;
 
-    // 2. Processar Filtros Comb em Paralelo
-    // Como estamos fazendo Mono, somamos todos os combs
-    for (int i = 0; i < NUM_COMBS; i++) {
-        output_accum += process_comb(&r_params->combs[i], input, r_params->gain_damp, r_params->gain_room);
+    /* 1) Entrada com ganho fixo 0.015 em Q15: input_q15 = input * G */
+    Int16 input_q15 = q15_mul(input_sample, REV_FIXED_GAIN_Q15);
+
+    /* 2) Filtros Comb em paralelo */
+    acc32 = 0;
+    for (i = 0; i < NUM_COMBS; i++)
+    {
+        Int16 c = process_comb(&r_params->combs[i],
+                               input_q15,
+                               r_params->gain_damp,
+                               r_params->gain_room);
+        acc32 += (Int32)c;   /* acumula em 32 bits para evitar wrap imediato */
+    }
+    combOut = sat_q15(acc32);   /* volta para Q15 */
+
+    /* 3) Allpass em série */
+    apOut = combOut;
+    for (i = 0; i < NUM_ALLPASS; i++)
+    {
+        apOut = process_allpass(&r_params->allpasses[i], apOut);
     }
 
-    // 3. Processar Filtros All-Pass em Série
-    for (int i = 0; i < NUM_ALLPASS; i++) {
-        output_accum = process_allpass(&r_params->allpasses[i], output_accum);
+    /* 4) Mix wet/dry usando intrinsics */
+    {
+        Int16 wet_q15 = q15_mul(apOut,       r_params->gain_wet1);
+        Int16 dry_q15 = q15_mul(input_sample, r_params->gain_dry);
+        Int16 y_q15   = q15_add(wet_q15, dry_q15);
+
+        return y_q15;
     }
+}
 
-    // 4. Mixar Wet/Dry
-    float wet_mix = output_accum * (r_params->gain_wet1 + r_params->gain_wet2);
-    float dry_mix = input_sample * r_params->gain_dry;
-    
-    float final_sample = wet_mix + dry_mix;
+/* =========================================================================
+ * Processamento de bloco
+ * ========================================================================= */
 
-    // 5. Hard Clipper e Conversão para Int16
-    if (final_sample > 1.0f) final_sample = 1.0f;
-    if (final_sample < -1.0f) final_sample = -1.0f;
-
-    return final_sample;
+void reverb_process_block(reverb_params_t *r_params,
+                          Int16 *in,
+                          Int16 *out,
+                          Uint16 nSamples)
+{
+    Uint16 n;
+    for (n = 0; n < nSamples; n++)
+    {
+        out[n] = reverb_process(r_params, in[n]);
+    }
 }
