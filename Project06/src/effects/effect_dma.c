@@ -28,7 +28,6 @@ static void process_block_dma(volatile Uint16 *rcv,
     for (i = 0; i < n; i++)
     {
         Int16 out  = (Int16)rcv[i];
-
         out = out * GAIN;
         out = autotune_process(&autotuneT, out);
         out = reverb_process(&gReverb, out);

@@ -1,214 +1,219 @@
 #include "autotune.h"
-#include "c55x.h" // Intrinsics da família C55x
+#include "c55x.h"  /* _smpy, _sadd, _ssub */
 
-/* =========================================================================
- * Helpers de saturação / Q15 e intrinsics (semelhante ao reverb.c)
- * ========================================================================= */
+/* ========= Helpers intrinsics ========= */
+static inline Int16 q15_mul(Int16 a, Int16 b) { return _smpy(a, b); }
+static inline Int16 q15_add(Int16 a, Int16 b) { return _sadd(a, b); }
+static inline Int16 q15_sub(Int16 a, Int16 b) { return _ssub(a, b); }
 
-/* Saturação manual 32 → Q15 */
-static inline Int16 sat_q15(Int32 x) {
-    if (x > 32767) return 32767;
+static inline Int16 sat16(Int32 x)
+{
+    if (x > 32767)  return 32767;
     if (x < -32768) return -32768;
     return (Int16)x;
 }
 
-/* Multiplicação Q15 usando intrinsic saturada fracionária */
-static inline Int16 q15_mul(Int16 a, Int16 b) {
-    return _smpy(a, b);
+/* abs seguro em Int32 (sem <stdlib.h>) */
+static inline Int32 iabs32(Int32 x) { return (x < 0) ? -x : x; }
+
+/* ========= Interpolação linear Q15 =========
+   read_idx_q16 é Q16.15:
+   idx_int = read>>15; frac = read & 0x7FFF (Q15)
+*/
+static inline Int16 interp_q15(const Int16 *buf, Int32 read_idx_q16)
+{
+    Uint16 idx = (Uint16)((read_idx_q16 >> 15) & AT_MASK);
+    Uint16 idx1 = (idx + 1u) & AT_MASK;
+
+    Int16 frac = (Int16)(read_idx_q16 & 0x7FFF);     /* Q15 [0..32767] */
+    Int16 one_minus = (Int16)(Q15_ONE - frac);
+
+    Int16 v0 = buf[idx];
+    Int16 v1 = buf[idx1];
+
+    Int16 p0 = q15_mul(v0, one_minus);
+    Int16 p1 = q15_mul(v1, frac);
+
+    return q15_add(p0, p1);
 }
 
-/* Soma Q15 saturada */
-static inline Int16 q15_add(Int16 a, Int16 b) {
-    return _sadd(a, b);
+/* ========= Crossfade triangular em Q15 =========
+   Usa distância entre read_head_1 e write (em Q16.15), pico no meio do buffer
+*/
+static inline Int16 tri_weight_q15(Int32 dist_q16, Int32 half_q16)
+{
+    /* dist em [0..buffer) -> centraliza em half */
+    Int32 x = dist_q16 - half_q16;
+    x = iabs32(x);
+    if (x > half_q16) x = half_q16;
+
+    /* w = 1 - |x|/half  em Q15 */
+    Int32 w = ((half_q16 - x) << 15) / half_q16;  /* 0..32768 */
+    if (w > 32767) w = 32767;
+    return (Int16)w;
 }
 
-/* Subtração Q15 saturada */
-static inline Int16 q15_sub(Int16 a, Int16 b) {
-    return _ssub(a, b);
-}
+/* ========= AMDF em inteiro (Q15) =========
+   Retorna período (samples) ou 0 se “sem pitch confiável”.
+*/
+static Uint16 detect_period_amdf_q15(const Int16 *buf)
+{
+    Uint16 min_period = (Uint16)(AT_SAMPLE_RATE / AT_MAX_FREQ);
+    Uint16 max_period = (Uint16)(AT_SAMPLE_RATE / AT_MIN_FREQ);
 
-/* Conversão float [-1,1) -> Q15 */
-static Int16 float_to_q15(float x) {
-    if (x >= 0.999969f) return 32767;
-    if (x <= -1.0f) return -32768;
-    return (Int16)(x * 32768.0f);
-}
+    if (max_period >= (AT_BUFFER_SIZE / 2u))
+        max_period = (AT_BUFFER_SIZE / 2u);
 
-/* Conversão Q15 -> float */
-static float q15_to_float(Int16 x) {
-    return ((float)x) / 32768.0f;
-}
+    Uint16 best_p = 0;
+    Int32  best_avg = 0x7FFFFFFF;
+    Uint16 p, k;
+    for (p = min_period; p <= max_period; p++)
+    {
+        Int32 acc = 0;
+        Uint16 checks = (Uint16)(AT_BUFFER_SIZE - p);
 
-
-/* =========================================================================
- * Funções de processamento de áudio (mantidas em float para simplicidade)
- * ========================================================================= */
-
-// Detecção de pitch AMDF (mantida em float)
-float detect_pitch_amdf(float *buffer, int size, float sample_rate) {
-    int min_period = (int)(sample_rate / AT_MAX_FREQ);
-    int max_period = (int)(sample_rate / AT_MIN_FREQ);
-    if (max_period >= size / 2) max_period = size / 2;
-
-    int best_period = 0;
-    float min_diff = 1e9f;
-    int p, k;
-
-    for (p = min_period; p <= max_period; p++) {
-        float diff = 0.0f;
-        int checks = 0;
-        for (k = 0; k < size - p; k++) {
-            float delta = buffer[k] - buffer[k + p];
-            diff += (delta > 0 ? delta : -delta);
-            checks++;
+        for (k = 0; k < checks; k++)
+        {
+            Int32 d = (Int32)buf[k] - (Int32)buf[k + p];
+            acc += iabs32(d);
         }
-        if (checks > 0) diff /= checks;
 
-        if (diff < min_diff) {
-            min_diff = diff;
-            best_period = p;
+        /* média em “Q15 raw”: acc/checks (a unidade é Q15) */
+        Int32 avg = acc / (Int32)checks;
+
+        if (avg < best_avg)
+        {
+            best_avg = avg;
+            best_p = p;
         }
     }
 
-    if (min_diff > 0.1f) return 0.0f;
-    if (best_period > 0) return sample_rate / (float)best_period;
-    return 0.0f;
+    /* threshold: se média muito alta, não confia */
+    if (best_p == 0) return 0;
+
+    if (best_avg > (Int32)AT_AMDF_THRESHOLD_Q15)
+        return 0;
+
+    return best_p;
 }
 
-/* =========================================================================
- * Funções de processamento em Q15
- * ========================================================================= */
+/* ========= Atualiza ratio (Q16.15) a partir de período detectado =========
+   ratio = detected_period / target_period
+   target_period_q16 = Fs/target_freq em Q16.15
+*/
+static Int32 period_to_ratio_q16(Uint16 detected_period, Int32 target_period_q16)
+{
+    if (detected_period == 0) return Q16_ONE; /* bypass */
 
-// Leitura interpolada para o buffer de delay em Q15
-static Int16 get_interpolated_sample_q15(Int16 *buffer, Int32 read_idx_q16, int buffer_size) {
-    Int16 idx_int = (Int16)(read_idx_q16 >> 15);
-    Int16 frac_q15 = (Int16)(read_idx_q16 & 0x7FFF); // Máscara para pegar os 15 bits fracionários
+    /* ratio_q16 = detected_period / (target_period_q16/32768)
+       => ratio_q16 = (detected_period<<15) / target_period_q16   (Q16.15)
+    */
+    Int32 num = ((Int32)detected_period) << 15;
+    Int32 den = target_period_q16;
+    if (den <= 0) return Q16_ONE;
 
-    Int16 idx_next = idx_int + 1;
-    if (idx_next >= buffer_size) idx_next = 0;
+    Int32 r = num / den; /* ainda Q16.15 */
 
-    Int16 sample1 = buffer[idx_int];
-    Int16 sample2 = buffer[idx_next];
+    /* clamp 0.5..2.0 */
+    if (r < (Q16_ONE >> 1)) r = (Q16_ONE >> 1);
+    if (r > (Q16_ONE << 1)) r = (Q16_ONE << 1);
 
-    Int16 term1 = q15_mul(sample1, q15_sub(Q15_ONE, frac_q15));
-    Int16 term2 = q15_mul(sample2, frac_q15);
-
-    return q15_add(term1, term2);
+    return r;
 }
 
-
-void autotune_init(autotune_t *at, float target_freq) {
-    int i;
-    at->target_freq = target_freq;
+void autotune_init(autotune_t *at, Uint16 target_freq_hz)
+{
+    at->target_freq_hz = target_freq_hz;
     at->correction_amount_q15 = AT_CORRECTION_AMOUNT_Q15;
-    at->smooth_factor_q15 = AT_SMOOTH_FACTOR_Q15;
+    at->smooth_factor_q15     = AT_SMOOTH_FACTOR_Q15;
 
-    at->current_detected_freq = target_freq;
     at->write_pos = 0;
+    at->d_write_idx = 0;
     at->samples_since_update = 0;
 
-    at->d_write_idx = 0;
-    // Inicia o ponteiro de leitura na metade, em formato Q16.15
-    at->d_read_idx_q16 = ((Int32)(AT_BUFFER_SIZE / 2)) << 15;
-    at->current_ratio_q15 = Q15_ONE; // Razão 1.0
+    at->current_period = 0;
 
-    for (i = 0; i < AT_BUFFER_SIZE; i++) {
+    /* target_period_q16 = Fs/target_freq em Q16.15:
+       target_period = Fs/target_freq (em samples).
+       Q16.15 => (Fs<<15)/target_freq
+    */
+    at->target_period_q16 = ((Int32)AT_SAMPLE_RATE << 15) / (Int32)target_freq_hz;
+
+    at->current_ratio_q16 = Q16_ONE;
+
+    /* leitura começa no meio do buffer */
+    at->d_read_idx_q16 = ((Int32)(AT_BUFFER_SIZE / 2u)) << 15;
+    Uint16 i = 0;
+    for (i = 0; i < AT_BUFFER_SIZE; i++)
+    {
         at->input_buffer[i] = 0;
         at->delay_buffer[i] = 0;
     }
 }
 
-Int16 autotune_process(autotune_t *at, Int16 input) {
-    // 1. Armazenar no buffer de análise e delay
-    at->input_buffer[at->write_pos] = input;
-    at->delay_buffer[at->d_write_idx] = input;
+Int16 autotune_process(autotune_t *at, Int16 input_q15)
+{
+    /* 1) grava nos buffers */
+    at->input_buffer[at->write_pos] = input_q15;
+    at->delay_buffer[at->d_write_idx] = input_q15;
 
-    // ==========================================================
-    // ESTÁGIO 1: DETECÇÃO (convertendo para float temporariamente)
-    // ==========================================================
+    /* 2) a cada AT_UPDATE_RATE, detecta período e ajusta ratio */
     at->samples_since_update++;
-    if (at->samples_since_update >= AT_UPDATE_RATE) {
-        // Buffer temporário para a detecção em float
-        static float float_buf[AT_BUFFER_SIZE];
-        int i;
-        for(i=0; i<AT_BUFFER_SIZE; i++) {
-            float_buf[i] = q15_to_float(at->input_buffer[i]);
-        }
+    if (at->samples_since_update >= AT_UPDATE_RATE)
+    {
+        Uint16 p = detect_period_amdf_q15(at->input_buffer);
+        if (p != 0) at->current_period = p;
 
-        float detected = detect_pitch_amdf(float_buf, AT_BUFFER_SIZE, AT_SAMPLE_RATE);
-        if (detected > 0.0f) {
-            at->current_detected_freq = (at->current_detected_freq * 0.5f) + (detected * 0.5f);
-        }
+        Int32 ideal_ratio_q16 = period_to_ratio_q16(at->current_period, at->target_period_q16);
+
+        /* target_ratio = 1 + (ideal-1)*correction_amount */
+        Int32 delta_q16 = ideal_ratio_q16 - Q16_ONE;
+        Int32 scaled = (delta_q16 * (Int32)at->correction_amount_q15) >> 15;
+        Int32 target_ratio_q16 = Q16_ONE + scaled;
+
+        /* smooth: current += (target-current)*smooth */
+        Int32 diff = target_ratio_q16 - at->current_ratio_q16;
+        Int32 adj  = (diff * (Int32)at->smooth_factor_q15) >> 15;
+        at->current_ratio_q16 += adj;
+
+        /* clamp final 0.5..2.0 */
+        if (at->current_ratio_q16 < (Q16_ONE >> 1)) at->current_ratio_q16 = (Q16_ONE >> 1);
+        if (at->current_ratio_q16 > (Q16_ONE << 1)) at->current_ratio_q16 = (Q16_ONE << 1);
+
         at->samples_since_update = 0;
     }
 
-    // ==========================================================
-    // ESTÁGIO 2: CÁLCULO DA RAZÃO (em float, depois convertido para Q15)
-    // ==========================================================
-    float freq_in = (at->current_detected_freq < AT_MIN_FREQ) ? at->target_freq : at->current_detected_freq;
-    float ideal_ratio = at->target_freq / freq_in;
-
-    // Aplica a força da correção
-    float target_ratio_f = 1.0f + (ideal_ratio - 1.0f) * AT_CORRECTION_AMOUNT;
-
-    // Clamp de segurança
-    if (target_ratio_f > 2.0f) target_ratio_f = 2.0f;
-    if (target_ratio_f < 0.5f) target_ratio_f = 0.5f;
-
-    Int16 target_ratio_q15 = float_to_q15(target_ratio_f / 2.0f); // Normaliza para Q15 (div por 2 pois ratio pode ser > 1)
-
-    // Suavização em Q15
-    Int16 diff = q15_sub(target_ratio_q15, at->current_ratio_q15);
-    Int16 adjustment = q15_mul(diff, at->smooth_factor_q15);
-    at->current_ratio_q15 = q15_add(at->current_ratio_q15, adjustment);
-
-
-    // ==========================================================
-    // ESTÁGIO 3: PITCH SHIFTING (em Q15)
-    // ==========================================================
-    Int16 ratio_q15 = at->current_ratio_q15;
-
-    // Lógica de dupla leitura
-    Int32 read_head_1_q16 = at->d_read_idx_q16;
-    Int32 read_head_2_q16 = at->d_read_idx_q16 + (((Int32)(AT_BUFFER_SIZE / 2)) << 15);
-
-    // Wrap around dos ponteiros (em Q16.15)
+    /* 3) pitch shifting (duas leituras + crossfade) */
     Int32 buffer_size_q16 = ((Int32)AT_BUFFER_SIZE) << 15;
-    if (read_head_1_q16 >= buffer_size_q16) read_head_1_q16 -= buffer_size_q16;
-    if (read_head_2_q16 >= buffer_size_q16) read_head_2_q16 -= buffer_size_q16;
+    Int32 half_q16        = buffer_size_q16 >> 1;
 
-    // Cálculo dos pesos (cross-fade)
-    Int32 dist_q16 = read_head_1_q16 - (((Int32)at->d_write_idx) << 15);
+    Int32 write_q16 = ((Int32)at->d_write_idx) << 15;
+
+    Int32 read1_q16 = at->d_read_idx_q16;
+    Int32 read2_q16 = read1_q16 + half_q16;
+    if (read2_q16 >= buffer_size_q16) read2_q16 -= buffer_size_q16;
+
+    /* distância read1->write para o crossfade */
+    Int32 dist_q16 = read1_q16 - write_q16;
     if (dist_q16 < 0) dist_q16 += buffer_size_q16;
 
-    Int32 half_buffer_q16 = buffer_size_q16 >> 1;
-    Int32 raw_val_q16 = dist_q16 - half_buffer_q16;
+    Int16 w1 = tri_weight_q15(dist_q16, half_q16);
+    Int16 w2 = q15_sub(Q15_ONE, w1);
 
-    // Normaliza para Q15
-    Int16 weight_1 = float_to_q15(1.0f - (float)abs(raw_val_q16) / half_buffer_q16);
-    if (weight_1 < 0) weight_1 = 0;
-    Int16 weight_2 = q15_sub(Q15_ONE, weight_1);
+    Int16 s1 = interp_q15(at->delay_buffer, read1_q16);
+    Int16 s2 = interp_q15(at->delay_buffer, read2_q16);
 
-    // Leitura e Mixagem
-    Int16 sample1 = get_interpolated_sample_q15(at->delay_buffer, read_head_1_q16, AT_BUFFER_SIZE);
-    Int16 sample2 = get_interpolated_sample_q15(at->delay_buffer, read_head_2_q16, AT_BUFFER_SIZE);
+    Int16 y1 = q15_mul(s1, w1);
+    Int16 y2 = q15_mul(s2, w2);
+    Int16 out = q15_add(y1, y2);
 
-    Int16 term1 = q15_mul(sample1, weight_1);
-    Int16 term2 = q15_mul(sample2, weight_2);
-    Int16 sample_out = q15_add(term1, term2);
+    /* 4) avança ponteiros */
+    at->d_write_idx = (at->d_write_idx + 1u) & AT_MASK;
+    at->write_pos   = (at->write_pos + 1u) & AT_MASK;
 
-    // Atualização dos Ponteiros
-    at->d_write_idx++;
-    if (at->d_write_idx >= AT_BUFFER_SIZE) at->d_write_idx = 0;
-
-    at->write_pos++;
-    if (at->write_pos >= AT_BUFFER_SIZE) at->write_pos = 0;
-
-    // Avança o ponteiro de leitura usando a razão (multiplicação Q15)
-    // Multiplicamos por 2 porque a razão foi normalizada
-    Int32 step = (Int32)q15_mul(_sadd(ratio_q15, ratio_q15), Q15_ONE);
-    at->d_read_idx_q16 += step;
+    /* step em Q16.15 = current_ratio_q16 (coerente!) */
+    at->d_read_idx_q16 += at->current_ratio_q16;
     if (at->d_read_idx_q16 >= buffer_size_q16) at->d_read_idx_q16 -= buffer_size_q16;
 
-    return sample_out;
+    return out;
 }

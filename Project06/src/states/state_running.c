@@ -14,10 +14,10 @@
 #include "../state_machine/state_machine.h"
 #include "state_running.h"
 
-#define ROOM_SIZE 0.9f    // Tamanho da sala (0.0 a 1.0). Maior = eco mais longo;.
-#define DAMPING 0.1f      // Abafamento (0.0 a 1.0). 0.0 = som limpo; 1.0 = som abafado.
-#define WET_LEVEL 0.25f    // Volume do efeito (0.0 a 1.0). Quanto de "eco" vocï¿½ quer ouvir na mistura.
-#define DRY_LEVEL 0.75f    // Volume do som original (0.0 a 1.0). (Geralmente soma-se Wet+Dry <= 1.0).
+#define ROOM_SIZE 0.30f    // Tamanho da sala (0.0 a 1.0). Maior = eco mais longo;.
+#define DAMPING 0.15f     // Abafamento (0.0 a 1.0). 0.0 = som limpo; 1.0 = som abafado.
+#define WET_LEVEL 0.275f   // Volume do efeito (0.0 a 1.0). Quanto de "eco" você quer ouvir na mistura.
+#define DRY_LEVEL 0.225f    // Volume do som original (0.0 a 1.0). (Geralmente soma-se Wet+Dry <= 1.0).
 
 #define TARGET_NOTE 220.65f // FrequÃªncia alvo em Hz
 

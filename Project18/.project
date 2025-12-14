@@ -24,11 +24,4 @@
 		<nature>org.eclipse.cdt.core.ccnature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>default.ccxml</name>
-			<type>1</type>
-			<location>C:/Users/joao0/ti/CCSTargetConfigurations/default.ccxml</location>
-		</link>
-	</linkedResources>
 </projectDescription>
