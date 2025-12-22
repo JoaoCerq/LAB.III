@@ -1,7 +1,0 @@
-{
-  "files.associations": {
-    "*.ejs": "html",
-    "autotune.h": "c",
-    "reverb.h": "c"
-  }
-}

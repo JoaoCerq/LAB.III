@@ -5,7 +5,7 @@
 #include "reverb.h"
 #include "autotune.h"
 
-#define NUM_SAMPLES 1024
+#define NUM_SAMPLES 128
 #define SAMPLE_RATE 44100
 
 // Configurações do Reverb

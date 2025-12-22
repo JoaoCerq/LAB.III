@@ -1,0 +1,212 @@
+/*
+ * lcd.c
+ *
+ *  Created on: Nov 23, 2025
+ *      Author: joao0
+ */
+
+
+#include <lcd-osd9616/lcd.h>
+#include "ezdsp5502.h"
+#include "tistdtypes.h"
+
+
+//  printLetter(0x7C,0x09,0x0A,0x7C);  // A
+//  printLetter(0x36,0x49,0x49,0x7F);  // B
+//  printLetter(0x22,0x41,0x41,0x3E);  // C
+//  printLetter(0x3E,0x41,0x41,0x7F);  // D
+//  printLetter(0x41,0x49,0x49,0x7F);  // E
+//  printLetter(0x09,0x09,0x09,0x7F);  // F
+//  printLetter(0x39,0x49,0x41,0x3E);  // G
+//  printLetter(0x7F,0x08,0x08,0x7F);  // H
+//  printLetter(0x00,0x7F,0x00,0x00);  // I
+//  printLetter(0x3F,0x40,0x70,0x00);  // J
+//  printLetter(0x44,0x28,0x10,0x7F);  // K
+//  printLetter(0x40,0x40,0x40,0x7F);  // L
+//  printLetter(0x7F,0x06,0x06,0x7F);  // M
+//  printLetter(0x7F,0x30,0x0E,0x7F);  // N
+//  printLetter(0x3E,0x41,0x41,0x3E);  // O
+//  printLetter(0x06,0x09,0x09,0x7F);  // P
+//  printLetter(0x46,0x29,0x19,0x7F);  // R
+//  printLetter(0x32,0x49,0x49,0x26);  // S
+//  printLetter(0x01,0x7F,0x01,0x01);  // T
+//  printLetter(0x3F,0x40,0x40,0x3F);  // U
+//  printLetter(0x63,0x1C,0x1C,0x63);  // X
+//  printLetter(0x3E,0x41,0x41,0x3E);  // 0
+//  printLetter(0x47,0x49,0x51,0x62);  // 2
+//  printLetter(0x37,0x49,0x49,0x49);  // 3
+//  printLetter(0x31,0x49,0x49,0x2F);  // 5
+//  printLetter(0x31,0x49,0x4A,0x34);  // 6
+//  printLetter(0x43,0x4D,0x51,0x61);  // Z
+
+
+/*
+ *
+ *  Int16 initial_lcd()
+ *
+ *      function that initializes the lcd for the state initial
+ * CADA UM OCUPA 5 ESPAÇOS! SÃO 96 AO TODO
+ */
+Int16 initial_lcd()
+{
+    Int16 i;
+
+    osd9616_send(0x00,0x2e);  // Deactivate Scrolling
+
+    /* Fill page 0 */
+    i = osd9616_send(0x00,0x00);   // Set low column address
+    osd9616_send(0x00,0x10);   // Set high column address
+    osd9616_send(0x00,0xb0+0); // Set page for page 0 to page 5
+
+    for(i=0;i<96;i++)
+    {
+        osd9616_send(0x40,0xff);
+    }
+
+    /* Write to page 0 */
+    osd9616_send(0x00,0x00);   // Set low column address
+    osd9616_send(0x00,0x10);   // Set high column address
+    osd9616_send(0x00,0xb0+0); // Set page for page 0 to page 5
+
+    for(i=0;i<30;i++) //96 <<<<<------
+    {
+        osd9616_send(0x40,0x00);  // Spaces
+    }
+
+    printLetter(0x40,0x40,0x40,0x7F);  // L
+    printLetter(0x7C,0x09,0x0A,0x7C);  // A
+    printLetter(0x00,0x7F,0x00,0x00);  // I
+    printLetter(0x01,0x7F,0x01,0x01);  // T
+    printLetter(0x00,0x7F,0x00,0x00);  // I
+    printLetter(0x7F,0x30,0x0E,0x7F);  // N
+    printLetter(0x00,0x7F,0x00,0x00);  // I
+
+
+    for(i=0;i<31;i++)
+    {
+        osd9616_send(0x40,0x00);  // Spaces
+    }
+
+    /* Fill page 1*/
+    osd9616_send(0x00,0x00);   // Set low column address
+    osd9616_send(0x00,0x10);   // Set high column address
+    osd9616_send(0x00,0xb0+1); // Set page for page 0 to page 5
+    for(i=0;i<96;i++)
+    {
+        osd9616_send(0x40,0xff);
+    }
+
+    /* Write to page 1*/
+    osd9616_send(0x00,0x00);   // Set low column address
+    osd9616_send(0x00,0x10);   // Set high column address
+    osd9616_send(0x00,0xb0+1); // Set page for page 0 to page 5
+
+    for(i=0;i<16;i++)
+    {
+        osd9616_send(0x40,0x00);
+    }
+
+    printLetter(0x7F,0x30,0x0E,0x7F);  // N
+    printLetter(0x3F,0x40,0x40,0x3F);  // U
+    printLetter(0x46,0x29,0x19,0x7F);  // R
+
+
+    for(i=0;i<17;i++)
+    {
+        osd9616_send(0x40,0x00);  // Spaces
+    }
+
+
+    osd9616_send(0x00,0x2e);  // Deactivate Scrolling
+
+
+    for(i=0;i<48;i++)
+    {
+        osd9616_send(0x40,0x00);  // Spaces
+    }
+
+    return 0;
+}
+
+
+Int16 running_lcd()
+{
+    Int16 i;
+
+    /* Fill page 0 */
+    i = osd9616_send(0x00,0x00);   // Set low column address
+    osd9616_send(0x00,0x10);   // Set high column address
+    osd9616_send(0x00,0xb0+0); // Set page for page 0 to page 5
+
+    for(i=0;i<96;i++)
+    {
+        osd9616_send(0x40,0xff);
+    }
+
+    /* Write to page 0 */
+    osd9616_send(0x00,0x00);   // Set low column address
+    osd9616_send(0x00,0x10);   // Set high column address
+    osd9616_send(0x00,0xb0+0); // Set page for page 0 to page 5
+
+    for(i=0;i<30;i++) //96 <<<<<------
+    {
+        osd9616_send(0x40,0x00);  // Spaces
+    }
+
+
+    printLetter(0x39,0x49,0x41,0x3E);  // G
+    printLetter(0x7F,0x30,0x0E,0x7F);  // N
+    printLetter(0x00,0x7F,0x00,0x00);  // I
+    printLetter(0x7F,0x30,0x0E,0x7F);  // N
+    printLetter(0x7F,0x30,0x0E,0x7F);  // N
+    printLetter(0x3F,0x40,0x40,0x3F);  // U
+    printLetter(0x46,0x29,0x19,0x7F);  // R
+
+
+    for(i=0;i<31;i++)
+    {
+        osd9616_send(0x40,0x00);  // Spaces
+    }
+
+    /* Fill page 1*/
+    osd9616_send(0x00,0x00);   // Set low column address
+    osd9616_send(0x00,0x10);   // Set high column address
+    osd9616_send(0x00,0xb0+1); // Set page for page 0 to page 5
+    for(i=0;i<96;i++)
+    {
+        osd9616_send(0x40,0xff);
+    }
+
+    /* Write to page 1*/
+    osd9616_send(0x00,0x00);   // Set low column address
+    osd9616_send(0x00,0x10);   // Set high column address
+    osd9616_send(0x00,0xb0+1); // Set page for page 0 to page 5
+
+
+
+    for(i=0;i<48;i++)
+        {
+            osd9616_send(0x40,0x00);  // Spaces
+        }
+
+    for(i=0;i<14;i++)
+    {
+        osd9616_send(0x40,0x00);
+    }
+
+
+    printLetter(0x06,0x09,0x09,0x7F);  // P
+    printLetter(0x3E,0x41,0x41,0x3E);  // O
+    printLetter(0x01,0x7F,0x01,0x01);  // T
+    printLetter(0x32,0x49,0x49,0x26);  // S
+
+
+    for(i=0;i<14;i++)
+    {
+        osd9616_send(0x40,0x00);  // Spaces
+    }
+
+    return 0;
+}
+
+
